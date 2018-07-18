@@ -35,7 +35,10 @@ func (p *proxy) Start() error {
 	rp := httputil.NewSingleHostReverseProxy(p.qtumRPC)
 	rp.Transport = &Transport{
 		transformers: map[string]transformer{
-			"eth_sendTransaction": transformerFunc(transformSendTransaction),
+			"eth_sendTransaction":       transformerFunc(transformSendTransaction),
+			"eth_call":                  transformerFunc(transformCall),
+			"eth_getTransactionByHash":  transformerFunc(transformTransactionByHash),
+			"eth_getTransactionReceipt": transformerFunc(transformTransactionReceipt),
 		},
 		logger:   p.logger,
 		userInfo: p.qtumRPC.User,
