@@ -15,12 +15,12 @@ type JSONRPCRequest struct {
 type JSONRPCRersult struct {
 	RawResult json.RawMessage `json:"result"`
 	Error     *JSONRPCError   `json:"error"`
-	ID        string          `json:"id"`
+	ID        json.RawMessage `json:"id"`
 }
 
 type JSONRPCError struct {
-	Code    int
-	Message string
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 func (err *JSONRPCError) Error() string {

@@ -40,9 +40,9 @@ type transformer interface {
 func createcontract(req *qtum.JSONRPCRequest, param map[string]string) (*qtum.JSONRPCRequest, error) {
 	if v, ok := param["value"]; ok {
 		if v != "" && v != "0x0" {
-			return nil, ProxyError{
-				Code: ErrInvalid,
-				Msg:  "value must be empty",
+			return nil, &qtum.JSONRPCError{
+				Code:    ErrInvalid,
+				Message: "value must be empty",
 			}
 		}
 	}
@@ -105,8 +105,8 @@ func createcontract(req *qtum.JSONRPCRequest, param map[string]string) (*qtum.JS
 }
 
 func sendtocontract(param map[string]string) (*qtum.JSONRPCRequest, error) {
-	return nil, ProxyError{
-		Code: ErrInvalid,
-		Msg:  "unsupport",
+	return nil, &qtum.JSONRPCError{
+		Code:    ErrInvalid,
+		Message: "unsupport",
 	}
 }
