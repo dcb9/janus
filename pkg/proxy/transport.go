@@ -7,19 +7,21 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dcb9/janus/pkg/qtum"
+	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 )
 
 type Transport struct {
-	transformers map[string]transformer
-	logger       log.Logger
-	userInfo     *url.Userinfo
+	reqTransformers  map[string]transformer.RequestTransformer
+	respTransformers map[string]transformer.ResponseTransformer
+	logger           log.Logger
+	userInfo         *url.Userinfo
 }
 
 func (t *Transport) RoundTrip(httpReq *http.Request) (resp *http.Response, err error) {
-	rpcReq := &qtum.JSONRPCRequest{}
+	rpcReq := &rpc.JSONRPCRequest{}
 	if err = bind(httpReq, &rpcReq); err != nil {
 		return nil, err
 	}
@@ -27,17 +29,17 @@ func (t *Transport) RoundTrip(httpReq *http.Request) (resp *http.Response, err e
 	defer func(id json.RawMessage) {
 		if err != nil {
 			switch err.(type) {
-			case *qtum.JSONRPCError:
-				resp, err = newJSONResponse(http.StatusInternalServerError, &qtum.JSONRPCRersult{
-					Error: err.(*qtum.JSONRPCError),
+			case *rpc.JSONRPCError:
+				resp, err = newJSONResponse(http.StatusInternalServerError, &rpc.JSONRPCResult{
+					Error: err.(*rpc.JSONRPCError),
 					ID:    id,
 				})
 			}
 		}
 	}(rpcReq.ID)
 
-	if transformer, ok := t.transformers[rpcReq.Method]; ok {
-		if rpcReq, err = transformer.transform(rpcReq); err != nil {
+	if trafo, ok := t.reqTransformers[rpcReq.Method]; ok {
+		if rpcReq, err = trafo.Transform(rpcReq); err != nil {
 			return nil, err
 		}
 	}

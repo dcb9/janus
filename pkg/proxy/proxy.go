@@ -5,6 +5,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 )
@@ -34,14 +35,10 @@ func New(qtumRPC string, addr string, opts ...Option) (*proxy, error) {
 func (p *proxy) Start() error {
 	rp := httputil.NewSingleHostReverseProxy(p.qtumRPC)
 	rp.Transport = &Transport{
-		transformers: map[string]transformer{
-			"eth_sendTransaction":       transformerFunc(transformSendTransaction),
-			"eth_call":                  transformerFunc(transformCall),
-			"eth_getTransactionByHash":  transformerFunc(transformTransactionByHash),
-			"eth_getTransactionReceipt": transformerFunc(transformTransactionReceipt),
-		},
-		logger:   p.logger,
-		userInfo: p.qtumRPC.User,
+		reqTransformers:  transformer.RequestTransformers,
+		respTransformers: transformer.ResponseTransformers,
+		logger:           p.logger,
+		userInfo:         p.qtumRPC.User,
 	}
 	level.Warn(p.logger).Log("listen", p.address, "qtum_rpc", p.qtumRPC, "msg", "proxy started")
 	return http.ListenAndServe(p.address, rp)

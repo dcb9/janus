@@ -1,8 +1,13 @@
-package qtum
+package rpc
 
 import (
 	"encoding/json"
 	"fmt"
+)
+
+const (
+	ErrInvalid          = 150
+	ErrUnknownOperation = 151
 )
 
 type JSONRPCRequest struct {
@@ -12,7 +17,7 @@ type JSONRPCRequest struct {
 	Params  json.RawMessage `json:"params"`
 }
 
-type JSONRPCRersult struct {
+type JSONRPCResult struct {
 	RawResult json.RawMessage `json:"result"`
 	Error     *JSONRPCError   `json:"error"`
 	ID        json.RawMessage `json:"id"`
