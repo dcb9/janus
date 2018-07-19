@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/dcb9/janus/pkg/eth"
+	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/go-kit/kit/log"
 )
 
-func sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (*rpc.JSONRPCRequest, error) {
+func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
 	gasLimit, gasPrice, err := EthGasToQtum(tx)
 	if err != nil {
 		return nil, err
@@ -44,9 +46,19 @@ func sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (*rpc.JSONR
 	}
 
 	req.Params = newParams
-	req.Method = "sendtocontract"
+	req.Method = qtum.MethodSendtocontract
 
-	return req, nil
+	l := log.WithPrefix(m.logger, "method", req.Method)
+	return func(result *rpc.JSONRPCResult) error {
+		return m.SendtocontractResp(context{
+			logger: l,
+			req:    req,
+		}, result)
+	}, nil
+}
+
+func (m *Manager) SendtocontractResp(c context, result *rpc.JSONRPCResult) error {
+	return nil
 }
 
 //  Eth RPC

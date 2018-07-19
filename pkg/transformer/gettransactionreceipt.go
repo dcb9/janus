@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/go-kit/kit/log"
 )
 
-func transformTransactionReceipt(req *rpc.JSONRPCRequest) (*rpc.JSONRPCRequest, error) {
+func (m *Manager) GetTransactionReceipt(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []json.RawMessage
 	if err := json.Unmarshal(req.Params, &params); err != nil {
 		return nil, err
@@ -24,7 +26,7 @@ func transformTransactionReceipt(req *rpc.JSONRPCRequest) (*rpc.JSONRPCRequest, 
 	}
 
 	req.Params = newParams
-	req.Method = "gettransactionreceipt"
+	req.Method = qtum.MethodGettransactionreceipt
 
 	//Qtum RPC
 	//gettransactionreceipt "hash"
@@ -32,5 +34,15 @@ func transformTransactionReceipt(req *rpc.JSONRPCRequest) (*rpc.JSONRPCRequest, 
 	//  Argument:
 	//  1. "hash"          (string, required) The transaction hash
 
-	return req, nil
+	l := log.WithPrefix(m.logger, "method", req.Method)
+	return func(result *rpc.JSONRPCResult) error {
+		return m.GettransactionreceiptResp(context{
+			logger: l,
+			req:    req,
+		}, result)
+	}, nil
+}
+
+func (m *Manager) GettransactionreceiptResp(c context, result *rpc.JSONRPCResult) error {
+	return nil
 }

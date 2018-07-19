@@ -23,10 +23,18 @@ var (
 func action(pc *kingpin.ParseContext) error {
 	addr := fmt.Sprintf("%s:%d", *bind, *port)
 	logger := log.NewLogfmtLogger(os.Stdout)
+
 	if !*devMode {
 		logger = level.NewFilter(logger, level.AllowWarn())
 	}
-	s, err := proxy.New(*qtumRPC, addr, proxy.SetLogger(logger))
+
+	s, err := proxy.New(
+		*qtumRPC,
+		addr,
+		proxy.SetLogger(logger),
+		proxy.SetDebug(*devMode),
+	)
+
 	if err != nil {
 		return errors.Wrap(err, "new proxy")
 	}

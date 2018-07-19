@@ -2,13 +2,17 @@ package transformer
 
 import (
 	"encoding/json"
-	"strings"
+	"errors"
+	"fmt"
 
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
+	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/go-kit/kit/log"
 )
 
-func createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (*rpc.JSONRPCRequest, error) {
+func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
 	if tx.Value != "" && tx.Value != "0x0" {
 		return nil, &rpc.JSONRPCError{
 			Code:    rpc.ErrInvalid,
@@ -28,8 +32,11 @@ func createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (*rpc.JSONR
 
 	if tx.From != "" {
 		sender := tx.From
-		if strings.HasPrefix(sender, "0x") {
-			// todo convert hexaddress
+		if IsEthHex(sender) {
+			sender, err = m.qtumClient.FromHexAddress(EthHexToQtum(sender))
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		params = append(params, sender)
@@ -41,8 +48,38 @@ func createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (*rpc.JSONR
 	}
 
 	req.Params = newParams
-	req.Method = "createcontract"
-	return req, nil
+	req.Method = qtum.MethodCreatecontract
+
+	l := log.WithPrefix(m.logger, "method", req.Method)
+	return func(result *rpc.JSONRPCResult) error {
+		return m.CreatecontractResp(context{
+			logger: l,
+			req:    req,
+		}, result)
+	}, nil
+}
+
+func (m *Manager) CreatecontractResp(c context, result *rpc.JSONRPCResult) error {
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RawResult != nil {
+		sj, err := simplejson.NewJson(result.RawResult)
+		if err != nil {
+			return err
+		}
+		txid, err := sj.Get("txid").Bytes()
+		if err != nil {
+			return err
+		}
+
+		txidStr := fmt.Sprintf(`"0x%s"`, txid)
+		result.RawResult = []byte(txidStr)
+		return nil
+	}
+
+	return errors.New("result.RawResult must not be nil")
 }
 
 //  Eth RPC

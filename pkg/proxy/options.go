@@ -17,6 +17,13 @@ func SetLogger(l log.Logger) Option {
 	}
 }
 
+func SetDebug(debug bool) Option {
+	return func(p *proxy) error {
+		p.debug = debug
+		return nil
+	}
+}
+
 func setAddress(addr string) Option {
 	return func(p *proxy) error {
 		p.address = addr

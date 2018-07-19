@@ -3,11 +3,15 @@ package transformer
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
+	simplejson "github.com/bitly/go-simplejson"
+	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/go-kit/kit/log"
 )
 
-func transformTransactionByHash(req *rpc.JSONRPCRequest) (*rpc.JSONRPCRequest, error) {
+func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []string
 	if err := json.Unmarshal(req.Params, &params); err != nil {
 		return nil, err
@@ -25,9 +29,38 @@ func transformTransactionByHash(req *rpc.JSONRPCRequest) (*rpc.JSONRPCRequest, e
 	}
 
 	req.Params = newParams
-	req.Method = "gettransaction"
+	req.Method = qtum.MethodGettransaction
 
-	return req, nil
+	l := log.WithPrefix(m.logger, "method", req.Method)
+	return func(result *rpc.JSONRPCResult) error {
+		return m.GettransactionResp(context{
+			logger: l,
+			req:    req,
+		}, result)
+	}, nil
+}
+
+func (m *Manager) GettransactionResp(c context, result *rpc.JSONRPCResult) error {
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RawResult != nil {
+		sj, err := simplejson.NewJson(result.RawResult)
+		if err != nil {
+			return err
+		}
+		txid, err := sj.Get("txid").Bytes()
+		if err != nil {
+			return err
+		}
+
+		txidStr := fmt.Sprintf(`"0x%s"`, txid)
+		result.RawResult = []byte(txidStr)
+		return nil
+	}
+
+	return errors.New("result.RawResult must not be nil")
 }
 
 //Qtum RPC
