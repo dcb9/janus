@@ -14,3 +14,9 @@ const (
 	MethodSendtoaddress         = "sendtoaddress"
 	MethodCallcontract          = "callcontract"
 )
+
+type Log struct {
+	Address string   `json:"address"`
+	Topics  []string `json:"topics"`
+	Data    string   `json:"data"`
+}

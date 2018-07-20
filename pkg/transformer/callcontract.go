@@ -89,6 +89,7 @@ func (m *Manager) CallcontractResp(c context, result *rpc.JSONRPCResult) error {
 
 		outputStr := fmt.Sprintf(`"0x%s"`, output)
 		result.RawResult = []byte(outputStr)
+		result.JSONRPC = "2.0"
 		return nil
 	}
 

@@ -50,8 +50,14 @@ func (p *proxy) RoundTrip(httpReq *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
+	if p.debug {
+		level.Debug(p.logger).Log("msg", "before call response transformer")
+	}
 	if err = responseTransformer(result); err != nil {
 		return nil, err
+	}
+	if p.debug {
+		level.Debug(p.logger).Log("msg", "after call response transformer")
 	}
 
 	newBodyBytes, err := json.Marshal(result)

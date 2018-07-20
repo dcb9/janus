@@ -76,7 +76,12 @@ func (c *Client) GetHexAddress(addr string) (string, error) {
 		return "", err
 	}
 
-	return string(res.RawResult), nil
+	var hexAddr string
+	if err = json.Unmarshal(res.RawResult, &hexAddr); err != nil {
+		return "", err
+	}
+
+	return hexAddr, nil
 }
 
 func (c *Client) FromHexAddress(addr string) (string, error) {
@@ -88,7 +93,12 @@ func (c *Client) FromHexAddress(addr string) (string, error) {
 		return "", err
 	}
 
-	return string(res.RawResult), nil
+	var qtumAddr string
+	if err = json.Unmarshal(res.RawResult, &qtumAddr); err != nil {
+		return "", err
+	}
+
+	return qtumAddr, nil
 }
 
 func (c *Client) Request(reqBody *rpc.JSONRPCRequest) (*rpc.JSONRPCResult, error) {

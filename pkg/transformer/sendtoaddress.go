@@ -21,5 +21,6 @@ func (m *Manager) sendtoaddress(req *rpc.JSONRPCRequest, tx *eth.TransactionReq)
 }
 
 func (m *Manager) SendtoaddressResp(c context, result *rpc.JSONRPCResult) error {
+	result.JSONRPC = "2.0"
 	return nil
 }

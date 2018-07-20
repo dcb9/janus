@@ -31,15 +31,15 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 	}
 
 	if tx.From != "" {
-		sender := tx.From
-		if IsEthHex(sender) {
-			sender, err = m.qtumClient.FromHexAddress(EthHexToQtum(sender))
+		from := tx.From
+		if IsEthHex(from) {
+			from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		params = append(params, sender)
+		params = append(params, from)
 	}
 
 	newParams, err := json.Marshal(params)
@@ -76,6 +76,7 @@ func (m *Manager) CreatecontractResp(c context, result *rpc.JSONRPCResult) error
 
 		txidStr := fmt.Sprintf(`"0x%s"`, txid)
 		result.RawResult = []byte(txidStr)
+		result.JSONRPC = "2.0"
 		return nil
 	}
 

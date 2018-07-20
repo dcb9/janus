@@ -39,3 +39,10 @@ func EthHexToQtum(hex string) string {
 func IsEthHex(str string) bool {
 	return strings.HasPrefix(str, "0x") || common.IsHexAddress("0x"+str)
 }
+
+func QtumHexToEth(hex string) string {
+	if strings.HasPrefix(hex, "0x") {
+		return hex
+	}
+	return "0x" + hex
+}

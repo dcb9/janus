@@ -3,9 +3,7 @@ package transformer
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/go-kit/kit/log"
@@ -46,17 +44,20 @@ func (m *Manager) GettransactionResp(c context, result *rpc.JSONRPCResult) error
 	}
 
 	if result.RawResult != nil {
-		sj, err := simplejson.NewJson(result.RawResult)
-		if err != nil {
-			return err
-		}
-		txid, err := sj.Get("txid").Bytes()
-		if err != nil {
-			return err
-		}
+		/*
+			sj, err := simplejson.NewJson(result.RawResult)
+			if err != nil {
+				return err
+			}
+			txid, err := sj.Get("txid").Bytes()
+			if err != nil {
+				return err
+			}
 
-		txidStr := fmt.Sprintf(`"0x%s"`, txid)
-		result.RawResult = []byte(txidStr)
+			txidStr := fmt.Sprintf(`"0x%s"`, txid)
+			result.RawResult = []byte(txidStr)
+			result.JSONRPC = "2.0"
+		*/
 		return nil
 	}
 
