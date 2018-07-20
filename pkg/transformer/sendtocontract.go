@@ -2,8 +2,10 @@ package transformer
 
 import (
 	"encoding/json"
-	"strings"
+	"errors"
+	"fmt"
 
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
@@ -18,11 +20,10 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 
 	amount := 0
 	if tx.Value != "" {
-		v := EthHexToQtum(tx.Value)
-		_ = v
-		// FIXME
-		// amount = v
+		// TODO
+		// amount = tx.Value
 	}
+
 	params := []interface{}{
 		EthHexToQtum(tx.To),
 		EthHexToQtum(tx.Data),
@@ -31,13 +32,14 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		gasPrice,
 	}
 
-	if tx.From != "" {
-		sender := tx.From
-		if strings.HasPrefix(sender, "0x") {
-			// todo convert hexaddress
+	if from := tx.From; from != "" {
+		if IsEthHex(from) {
+			from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
+			if err != nil {
+				return nil, err
+			}
 		}
-
-		params = append(params, sender)
+		params = append(params, from)
 	}
 
 	newParams, err := json.Marshal(params)
@@ -58,7 +60,26 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 }
 
 func (m *Manager) SendtocontractResp(c context, result *rpc.JSONRPCResult) error {
-	return nil
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RawResult != nil {
+		sj, err := simplejson.NewJson(result.RawResult)
+		if err != nil {
+			return err
+		}
+		txid, err := sj.Get("txid").Bytes()
+		if err != nil {
+			return err
+		}
+
+		txidStr := fmt.Sprintf(`"0x%s"`, txid)
+		result.RawResult = []byte(txidStr)
+		result.JSONRPC = "2.0"
+		return nil
+	}
+	return errors.New("result.RawResult must not be nil")
 }
 
 //  Eth RPC

@@ -7,7 +7,7 @@ const (
 const (
 	MethodGethexaddress         = "gethexaddress"
 	MethodFromhexaddress        = "fromhexaddress"
-	MethodSendtocontract        = "fromhexaddress"
+	MethodSendtocontract        = "sendtocontract"
 	MethodGettransactionreceipt = "gettransactionreceipt"
 	MethodGettransaction        = "gettransaction"
 	MethodCreatecontract        = "createcontract"
