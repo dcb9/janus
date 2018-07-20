@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/bitly/go-simplejson"
+	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/go-kit/kit/log"
 )
 
 func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []string
-	if err := json.Unmarshal(req.Params, &params); err != nil {
+	if err := unmarshalRequest(req.Params, &params); err != nil {
 		return nil, err
 	}
 	if len(params) == 0 {
@@ -29,39 +30,30 @@ func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransfo
 	req.Params = newParams
 	req.Method = qtum.MethodGettransaction
 
-	l := log.WithPrefix(m.logger, "method", req.Method)
-	return func(result *rpc.JSONRPCResult) error {
-		return m.GettransactionResp(context{
-			logger: l,
-			req:    req,
-		}, result)
-	}, nil
+	return m.GettransactionResp, nil
 }
 
-func (m *Manager) GettransactionResp(c context, result *rpc.JSONRPCResult) error {
-	if result.Error != nil {
-		return result.Error
+func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error) {
+	var err error
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
+	}
+	txid, err := sj.Get("txid").String()
+	if err != nil {
+		return nil, err
+	}
+	blockHash, err := sj.Get("blockhash").String()
+	if err != nil {
+		return nil, err
 	}
 
-	if result.RawResult != nil {
-		/*
-			sj, err := simplejson.NewJson(result.RawResult)
-			if err != nil {
-				return err
-			}
-			txid, err := sj.Get("txid").Bytes()
-			if err != nil {
-				return err
-			}
-
-			txidStr := fmt.Sprintf(`"0x%s"`, txid)
-			result.RawResult = []byte(txidStr)
-			result.JSONRPC = "2.0"
-		*/
-		return nil
+	ethTxResp := eth.TransactionResponse{
+		Hash:      QtumHexToEth(txid),
+		BlockHash: QtumHexToEth(blockHash),
 	}
 
-	return errors.New("result.RawResult must not be nil")
+	return &ethTxResp, nil
 }
 
 //Qtum RPC

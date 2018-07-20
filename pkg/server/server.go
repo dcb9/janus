@@ -1,17 +1,16 @@
-package proxy
+package server
 
 import (
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/labstack/echo"
 )
 
-type proxy struct {
+type Server struct {
 	qtumRPC            *url.URL
 	address            string
 	transformerManager *transformer.Manager
@@ -20,10 +19,10 @@ type proxy struct {
 	debug              bool
 }
 
-func New(qtumRPC string, addr string, opts ...Option) (*proxy, error) {
+func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 	opts = append(opts, setQtumRPC(qtumRPC), setAddress(addr))
 
-	p := &proxy{
+	p := &Server{
 		logger: log.NewNopLogger(),
 	}
 
@@ -55,10 +54,12 @@ func New(qtumRPC string, addr string, opts ...Option) (*proxy, error) {
 	return p, nil
 }
 
-func (p *proxy) Start() error {
-	rp := httputil.NewSingleHostReverseProxy(p.qtumRPC)
-	rp.Transport = p
+func (s *Server) Start() error {
+	e := echo.New()
+	e.HideBanner = true
+	e.POST("/*", s.httpHandler)
+	e.HTTPErrorHandler = s.errorHandler
 
-	level.Warn(p.logger).Log("listen", p.address, "qtum_rpc", p.qtumRPC, "msg", "proxy started")
-	return http.ListenAndServe(p.address, rp)
+	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPC, "msg", "proxy started")
+	return e.Start(s.address)
 }

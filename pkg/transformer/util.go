@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -45,4 +47,11 @@ func QtumHexToEth(hex string) string {
 		return hex
 	}
 	return "0x" + hex
+}
+
+func unmarshalRequest(data []byte, v interface{}) error {
+	if err := json.Unmarshal(data, v); err != nil {
+		return UnmarshalRequestErr
+	}
+	return nil
 }

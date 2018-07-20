@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dcb9/janus/pkg/proxy"
+	"github.com/dcb9/janus/pkg/server"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
@@ -28,11 +28,11 @@ func action(pc *kingpin.ParseContext) error {
 		logger = level.NewFilter(logger, level.AllowWarn())
 	}
 
-	s, err := proxy.New(
+	s, err := server.New(
 		*qtumRPC,
 		addr,
-		proxy.SetLogger(logger),
-		proxy.SetDebug(*devMode),
+		server.SetLogger(logger),
+		server.SetDebug(*devMode),
 	)
 
 	if err != nil {

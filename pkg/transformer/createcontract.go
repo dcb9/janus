@@ -2,14 +2,11 @@ package transformer
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/go-kit/kit/log"
 )
 
 func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
@@ -50,37 +47,20 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 	req.Params = newParams
 	req.Method = qtum.MethodCreatecontract
 
-	l := log.WithPrefix(m.logger, "method", req.Method)
-	return func(result *rpc.JSONRPCResult) error {
-		return m.CreatecontractResp(context{
-			logger: l,
-			req:    req,
-		}, result)
-	}, nil
+	return m.CreatecontractResp, nil
 }
 
-func (m *Manager) CreatecontractResp(c context, result *rpc.JSONRPCResult) error {
-	if result.Error != nil {
-		return result.Error
+func (m *Manager) CreatecontractResp(result json.RawMessage) (interface{}, error) {
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
+	}
+	txid, err := sj.Get("txid").String()
+	if err != nil {
+		return nil, err
 	}
 
-	if result.RawResult != nil {
-		sj, err := simplejson.NewJson(result.RawResult)
-		if err != nil {
-			return err
-		}
-		txid, err := sj.Get("txid").Bytes()
-		if err != nil {
-			return err
-		}
-
-		txidStr := fmt.Sprintf(`"0x%s"`, txid)
-		result.RawResult = []byte(txidStr)
-		result.JSONRPC = "2.0"
-		return nil
-	}
-
-	return errors.New("result.RawResult must not be nil")
+	return QtumHexToEth(txid), nil
 }
 
 //  Eth RPC

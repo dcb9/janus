@@ -78,3 +78,17 @@ type TransactionReceipt struct {
 	Root              string `json:"root,omitempty"`    // DATA 32 bytes of post-transaction stateroot (pre Byzantium)
 	Status            string `json:"status"`            // QUANTITY either 1 (success) or 0 (failure)
 }
+
+type TransactionResponse struct {
+	Hash             string `json:"hash"`             // DATA, 32 Bytes - hash of the transaction.
+	Nonce            string `json:"nonce"`            // QUANTITY - the number of transactions made by the sender prior to this one.
+	BlockHash        string `json:"blockHash"`        // DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
+	BlockNumber      string `json:"blockNumber"`      // QUANTITY - block number where this transaction was in. null when its pending.
+	TransactionIndex string `json:"transactionIndex"` // QUANTITY - integer of the transactions index position in the block. null when its pending.
+	From             string `json:"from"`             // DATA, 20 Bytes - address of the sender.
+	To               string `json:"to"`               // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
+	Value            string `json:"value"`            // QUANTITY - value transferred in Wei.
+	GasPrice         string `json:"gasPrice"`         // QUANTITY - gas price provided by the sender in Wei.
+	Gas              string `json:"gas"`              // QUANTITY - gas provided by the sender.
+	Input            string `json:"input"`            // DATA - the data send along with the transaction.
+}
