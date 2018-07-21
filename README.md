@@ -151,6 +151,53 @@ $ curl --header 'Content-Type: application/json' --data \
 
 ### sendtoaddress method
 
+```
+$ curl --header 'Content-Type: application/json' --data \
+     '{"id":"10","jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"from":"0xcf4b32865abe674c9e75c568bc30cf3cbc701720","gas":"0x6691b7","gasPrice":"0x174876e800","value":"0xfffffff", "to": "0xc6f125a5a7ac965f22ef220d8dd639fe44c68db7"}]}' \
+     'http://localhost:23889'
+
+{
+  "jsonrpc": "2.0",
+  "result": "0xf28eb8ff36735920db213b2db6693c6baa2a5642b4e7860b88f7dc1204ac4ca3",
+  "id": "10"
+}
+
+
+$ curl --header 'Content-Type: application/json' --data \
+       '{"id":"10","jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["0xf28eb8ff36735920db213b2db6693c6baa2a5642b4e7860b88f7dc1204ac4ca3"]}' \
+  'localhost:23889'
+
+// notice: the tx receipt of sendtoaddress is an empty array
+{
+  "jsonrpc": "2.0",
+  "result": [],
+  "id": "10"
+}
+
+
+$ curl --header 'Content-Type: application/json' --data \
+       '{"id":"10","jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["0xf28eb8ff36735920db213b2db6693c6baa2a5642b4e7860b88f7dc1204ac4ca3"]}' \
+  'localhost:23889'
+
+// notice: blockNumber, transactionIndex, from, to are empty, because tx receipt of sendtoaddress is an empty array
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "hash": "0xf28eb8ff36735920db213b2db6693c6baa2a5642b4e7860b88f7dc1204ac4ca3",
+    "nonce": "",
+    "blockHash": "0x131a22facf5e1bb4ce0618ac8a2e4d4ee8a1a3602e45ffacc577c941762174f4",
+    "blockNumber": "",
+    "transactionIndex": "",
+    "from": "",
+    "to": "",
+    "value": "0x0",
+    "gasPrice": "",
+    "gas": "",
+    "input": ""
+  },
+  "id": "10"
+}
+```
 
 ## Support ETH methods
 
@@ -161,11 +208,12 @@ $ curl --header 'Content-Type: application/json' --data \
 
 ## Todo list
 
-- [ ] qtum sendtoaddress method
-
 ## Known issues
 
 - [ ] eth_getTransactionReceipt
-  - [ ] resp: logsBloom is an empty string
+  - [ ] `logsBloom` is an empty string
+  - [ ] result will be an empty array if the txid of the transaction is a transfer operation
 - [ ] eth_getTransactionByHash
-  - [ ] resp: nonce is an empty string
+  - [ ] `nonce` is an empty string
+  - [ ] `blockNumber`, `transactionIndex`, `from`, `to`, `value` will be empty, if the txid of the transaction is a transfer operation
+

@@ -75,8 +75,8 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 		GetGasLimit() (*big.Int, error)
 	}
 
+	var asm asmWithGasGasPriceEncodedABI
 	for _, out := range tx.Vout {
-		var asm asmWithGasGasPriceEncodedABI
 		switch out.ScriptPubKey.Type {
 		case "call":
 			if asm, err = qtum.ParseCallASM(out.ScriptPubKey.Asm); err != nil {
@@ -89,7 +89,10 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 		default:
 			continue
 		}
+		break
+	}
 
+	if asm != nil {
 		input = AddHexPrefix(asm.GetEncodedABI())
 		gasLimitBigInt, err := asm.GetGasLimit()
 		if err != nil {
@@ -101,26 +104,29 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 		}
 		gas = hexutil.EncodeBig(gasLimitBigInt)
 		gasPrice = hexutil.EncodeBig(gasPriceBigInt)
-		break
-	}
-
-	receipt, err := m.qtumClient.GetTransactionReceipt(txid)
-	if err != nil {
-		return nil, err
 	}
 
 	ethTxResp := eth.TransactionResponse{
-		Hash:             AddHexPrefix(txid),
-		BlockHash:        AddHexPrefix(blockHash),
-		Nonce:            "",
-		Value:            ethVal,
-		Input:            input,
-		Gas:              gas,
-		GasPrice:         gasPrice,
-		BlockNumber:      hexutil.EncodeUint64(receipt.BlockNumber),
-		TransactionIndex: hexutil.EncodeUint64(receipt.TransactionIndex),
-		From:             AddHexPrefix(receipt.From),
-		To:               AddHexPrefix(receipt.ContractAddress),
+		Hash:      AddHexPrefix(txid),
+		BlockHash: AddHexPrefix(blockHash),
+		Nonce:     "",
+		Value:     ethVal,
+		Input:     input,
+		Gas:       gas,
+		GasPrice:  gasPrice,
+	}
+
+	if asm != nil {
+		receipt, err := m.qtumClient.GetTransactionReceipt(txid)
+		if err != nil {
+			return nil, err
+		}
+		if receipt != nil {
+			ethTxResp.BlockNumber = hexutil.EncodeUint64(receipt.BlockNumber)
+			ethTxResp.TransactionIndex = hexutil.EncodeUint64(receipt.TransactionIndex)
+			ethTxResp.From = AddHexPrefix(receipt.From)
+			ethTxResp.To = AddHexPrefix(receipt.ContractAddress)
+		}
 	}
 
 	return &ethTxResp, nil

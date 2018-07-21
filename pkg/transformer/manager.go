@@ -85,3 +85,10 @@ func SetLogger(l log.Logger) func(*Manager) error {
 		return nil
 	}
 }
+
+func (m *Manager) getQtumWalletAddress(addr string) (string, error) {
+	if IsEthHexAddress(addr) {
+		return m.qtumClient.FromHexAddress(RemoveHexPrefix(addr))
+	}
+	return addr, nil
+}

@@ -55,7 +55,7 @@ func (s *Server) httpHandler(c echo.Context) error {
 
 func (s *Server) errorHandler(err error, c echo.Context) {
 	if err != nil {
-		id := c.Get("rpcID").(json.RawMessage)
+		id, _ := c.Get("rpcID").(json.RawMessage)
 		err := errors.Cause(err)
 		if err == transformer.UnmarshalRequestErr {
 			if err := c.JSON(http.StatusInternalServerError, &rpc.JSONRPCResult{
