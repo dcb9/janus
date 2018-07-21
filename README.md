@@ -73,7 +73,23 @@ $ curl --header 'Content-Type: application/json' --data \
      '{"id":"10","jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["0x6da39dc909debf70a536bbc108e2218fd7bce23305ddc00284075df5dfccc21b"]}' \
      'localhost:23889'
 
-// todo result
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "hash": "0x6da39dc909debf70a536bbc108e2218fd7bce23305ddc00284075df5dfccc21b",
+    "nonce": "",
+    "blockHash": "0xa5f0db33370d6a3e83ace9ed2b3ff74c29ad70b78427eb67de1d959dfa485085",
+    "blockNumber": "0x1c51",
+    "transactionIndex": "0x2",
+    "from": "0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19",
+    "to": "0x1d96667c8de1a6d8a2a393d6518f376ed3239dd3",
+    "value": "0x0",
+    "gasPrice": "0x28",
+    "gas": "0x6691b7",
+    "input": "0x608060405234801561001057600080fd5b506040516020806100f2833981016040525160005560bf806100336000396000f30060806040526004361060485763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504166360fe47b18114604d5780636d4ce63c146064575b600080fd5b348015605857600080fd5b5060626004356088565b005b348015606f57600080fd5b506076608d565b60408051918252519081900360200190f35b600055565b600054905600a165627a7a7230582049a087087e1fc6da0b68ca259d45a2e369efcbb50e93f9b7fa3e198de6402b8100290000000000000000000000000000000000000000000000000000000000000001"
+  },
+  "id": "10"
+}
 ```
 
 ### gettransactionreceipt method
@@ -145,10 +161,11 @@ $ curl --header 'Content-Type: application/json' --data \
 
 ## Todo list
 
-- [ ] transform eth_getTransactionByHash result
 - [ ] qtum sendtoaddress method
 
 ## Known issues
 
-- [ ] eth_getTransactionReceipt result
-  - [ ] logsBloom is an empty string
+- [ ] eth_getTransactionReceipt
+  - [ ] resp: logsBloom is an empty string
+- [ ] eth_getTransactionByHash
+  - [ ] resp: nonce is an empty string

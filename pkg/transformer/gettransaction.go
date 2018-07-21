@@ -2,12 +2,15 @@ package transformer
 
 import (
 	"encoding/json"
-	"errors"
+
+	"math/big"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 )
 
 func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
@@ -47,10 +50,77 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 	if err != nil {
 		return nil, err
 	}
+	hexField, err := sj.Get("hex").String()
+	if err != nil {
+		return nil, err
+	}
+
+	amount, err := sj.Get("amount").Float64()
+	if err != nil {
+		return nil, err
+	}
+	ethVal, err := QtumAmountToEthValue(amount)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := m.qtumClient.DecodeRawTransaction(hexField)
+	if err != nil {
+		return nil, errors.Wrap(err, "Manager#GettransactionResp")
+	}
+	var gas, gasPrice, input string
+	type asmWithGasGasPriceEncodedABI interface {
+		GetEncodedABI() string
+		GetGasPrice() (*big.Int, error)
+		GetGasLimit() (*big.Int, error)
+	}
+
+	for _, out := range tx.Vout {
+		var asm asmWithGasGasPriceEncodedABI
+		switch out.ScriptPubKey.Type {
+		case "call":
+			if asm, err = qtum.ParseCallASM(out.ScriptPubKey.Asm); err != nil {
+				return nil, err
+			}
+		case "create":
+			if asm, err = qtum.ParseCreateASM(out.ScriptPubKey.Asm); err != nil {
+				return nil, err
+			}
+		default:
+			continue
+		}
+
+		input = AddHexPrefix(asm.GetEncodedABI())
+		gasLimitBigInt, err := asm.GetGasLimit()
+		if err != nil {
+			return nil, err
+		}
+		gasPriceBigInt, err := asm.GetGasPrice()
+		if err != nil {
+			return nil, err
+		}
+		gas = hexutil.EncodeBig(gasLimitBigInt)
+		gasPrice = hexutil.EncodeBig(gasPriceBigInt)
+		break
+	}
+
+	receipt, err := m.qtumClient.GetTransactionReceipt(txid)
+	if err != nil {
+		return nil, err
+	}
 
 	ethTxResp := eth.TransactionResponse{
-		Hash:      AddHexPrefix(txid),
-		BlockHash: AddHexPrefix(blockHash),
+		Hash:             AddHexPrefix(txid),
+		BlockHash:        AddHexPrefix(blockHash),
+		Nonce:            "",
+		Value:            ethVal,
+		Input:            input,
+		Gas:              gas,
+		GasPrice:         gasPrice,
+		BlockNumber:      hexutil.EncodeUint64(receipt.BlockNumber),
+		TransactionIndex: hexutil.EncodeUint64(receipt.TransactionIndex),
+		From:             AddHexPrefix(receipt.From),
+		To:               AddHexPrefix(receipt.ContractAddress),
 	}
 
 	return &ethTxResp, nil

@@ -47,66 +47,32 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 	if err != nil {
 		return nil, err
 	}
-	sj = sj.GetIndex(0)
-	transactionHash, err := sj.Get("transactionHash").String()
+
+	receiptBytes, err := sj.GetIndex(0).Encode()
 	if err != nil {
 		return nil, err
 	}
-	blockHash, err := sj.Get("blockHash").String()
-	if err != nil {
-		return nil, err
-	}
-	contractAddress, err := sj.Get("contractAddress").String()
-	if err != nil {
+	var receipt *qtum.TransactionReceipt
+	if err = json.Unmarshal(receiptBytes, &receipt); err != nil {
 		return nil, err
 	}
 
-	transactionIndex, err := sj.Get("transactionIndex").Uint64()
-	if err != nil {
-		return nil, err
-	}
-	cumulativeGasUsed, err := sj.Get("cumulativeGasUsed").Uint64()
-	if err != nil {
-		return nil, err
-	}
-	gasUsed, err := sj.Get("gasUsed").Uint64()
-	if err != nil {
-		return nil, err
-	}
-	blockNumber, err := sj.Get("blockNumber").Uint64()
-	if err != nil {
-		return nil, err
-	}
-
-	excepted, err := sj.Get("excepted").String()
-	if err != nil {
-		return nil, err
-	}
 	status := "0x0"
-	if excepted == "None" {
+	if receipt.Excepted == "None" {
 		status = "0x1"
 	}
 
-	var qtumLogs []qtum.Log
-	qtumRawLog, err := sj.Get("log").Encode()
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(qtumRawLog, &qtumLogs)
-	if err != nil {
-		return nil, err
-	}
-	logs := make([]eth.Log, 0, len(qtumLogs))
-	for index, log := range qtumLogs {
+	logs := make([]eth.Log, 0, len(receipt.Log))
+	for index, log := range receipt.Log {
 		topics := make([]string, 0, len(log.Topics))
 		for _, topic := range log.Topics {
 			topics = append(topics, AddHexPrefix(topic))
 		}
 		logs = append(logs, eth.Log{
-			TransactionHash:  AddHexPrefix(transactionHash),
-			TransactionIndex: hexutil.EncodeUint64(transactionIndex),
-			BlockHash:        AddHexPrefix(blockHash),
-			BlockNumber:      hexutil.EncodeUint64(blockNumber),
+			TransactionHash:  AddHexPrefix(receipt.TransactionHash),
+			TransactionIndex: hexutil.EncodeUint64(receipt.TransactionIndex),
+			BlockHash:        AddHexPrefix(receipt.BlockHash),
+			BlockNumber:      hexutil.EncodeUint64(receipt.BlockNumber),
 			Data:             AddHexPrefix(log.Data),
 			Address:          AddHexPrefix(log.Address),
 			Topics:           topics,
@@ -115,13 +81,13 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 	}
 
 	ethTxReceipt := eth.TransactionReceipt{
-		TransactionHash:   AddHexPrefix(transactionHash),
-		TransactionIndex:  hexutil.EncodeUint64(transactionIndex),
-		BlockHash:         AddHexPrefix(blockHash),
-		BlockNumber:       hexutil.EncodeUint64(blockNumber),
-		ContractAddress:   AddHexPrefix(contractAddress),
-		CumulativeGasUsed: hexutil.EncodeUint64(cumulativeGasUsed),
-		GasUsed:           hexutil.EncodeUint64(gasUsed),
+		TransactionHash:   AddHexPrefix(receipt.TransactionHash),
+		TransactionIndex:  hexutil.EncodeUint64(receipt.TransactionIndex),
+		BlockHash:         AddHexPrefix(receipt.BlockHash),
+		BlockNumber:       hexutil.EncodeUint64(receipt.BlockNumber),
+		ContractAddress:   AddHexPrefix(receipt.ContractAddress),
+		CumulativeGasUsed: hexutil.EncodeUint64(receipt.CumulativeGasUsed),
+		GasUsed:           hexutil.EncodeUint64(receipt.GasUsed),
 		Logs:              logs,
 		Status:            status,
 

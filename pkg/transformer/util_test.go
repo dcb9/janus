@@ -21,6 +21,6 @@ func TestQtumAmountToEthValue(t *testing.T) {
 		t.Error(err)
 	}
 	if got != want {
-		t.Errorf("in: %s, want: %f, got: %f", in, want, got)
+		t.Errorf("in: %f, want: %s, got: %s", in, want, got)
 	}
 }

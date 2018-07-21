@@ -24,6 +24,12 @@ type JSONRPCResult struct {
 	ID        json.RawMessage `json:"id"`
 }
 
+type SuccessJSONRPCResult struct {
+	JSONRPC   string          `json:"jsonrpc"`
+	RawResult json.RawMessage `json:"result"`
+	ID        json.RawMessage `json:"id"`
+}
+
 type JSONRPCError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`

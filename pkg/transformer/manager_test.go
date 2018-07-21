@@ -2,7 +2,7 @@ package transformer
 
 import "testing"
 
-func TestEthHexToQtum(t *testing.T) {
+func TestRemoveHexPrefix(t *testing.T) {
 	cases := []map[string]string{
 		{
 			"in":   "0x8d124864e8840a114a8772c1daf82b61eb4dca01",
@@ -21,7 +21,7 @@ func TestEthHexToQtum(t *testing.T) {
 	for _, c := range cases {
 		in, want := c["in"], c["want"]
 		if got := RemoveHexPrefix(in); got != want {
-			t.Fatal("err: in: %s, want: %s, got: %s", in, want, got)
+			t.Errorf("err: in: %s, want: %s, got: %s", in, want, got)
 		}
 	}
 }

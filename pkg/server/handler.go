@@ -32,9 +32,6 @@ func (s *Server) httpHandler(c echo.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "qtum client request")
 	}
-	if result.Error != nil {
-		return result.Error
-	}
 	if result.RawResult == nil {
 		return errors.New("server response result.RawResult is nil")
 	}
