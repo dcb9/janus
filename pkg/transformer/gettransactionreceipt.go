@@ -78,6 +78,15 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 		return nil, err
 	}
 
+	excepted, err := sj.Get("excepted").String()
+	if err != nil {
+		return nil, err
+	}
+	status := "0x0"
+	if excepted == "None" {
+		status = "0x1"
+	}
+
 	var qtumLogs []qtum.Log
 	qtumRawLog, err := sj.Get("log").Encode()
 	if err != nil {
@@ -88,32 +97,35 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 		return nil, err
 	}
 	logs := make([]eth.Log, 0, len(qtumLogs))
-	for _, log := range qtumLogs {
+	for index, log := range qtumLogs {
 		topics := make([]string, 0, len(log.Topics))
 		for _, topic := range log.Topics {
 			topics = append(topics, QtumHexToEth(topic))
 		}
 		logs = append(logs, eth.Log{
-			Data:    QtumHexToEth(log.Data),
-			Address: QtumHexToEth(log.Address),
-			Topics:  topics,
+			TransactionHash:  QtumHexToEth(transactionHash),
+			TransactionIndex: hexutil.EncodeUint64(transactionIndex),
+			BlockHash:        QtumHexToEth(blockHash),
+			BlockNumber:      hexutil.EncodeUint64(blockNumber),
+			Data:             QtumHexToEth(log.Data),
+			Address:          QtumHexToEth(log.Address),
+			Topics:           topics,
+			LogIndex:         hexutil.EncodeUint64(uint64(index)),
 		})
 	}
 
 	ethTxReceipt := eth.TransactionReceipt{
 		TransactionHash:   QtumHexToEth(transactionHash),
-		BlockHash:         QtumHexToEth(blockHash),
-		ContractAddress:   QtumHexToEth(contractAddress),
 		TransactionIndex:  hexutil.EncodeUint64(transactionIndex),
+		BlockHash:         QtumHexToEth(blockHash),
+		BlockNumber:       hexutil.EncodeUint64(blockNumber),
+		ContractAddress:   QtumHexToEth(contractAddress),
 		CumulativeGasUsed: hexutil.EncodeUint64(cumulativeGasUsed),
 		GasUsed:           hexutil.EncodeUint64(gasUsed),
-		BlockNumber:       hexutil.EncodeUint64(blockNumber),
 		Logs:              logs,
+		Status:            status,
 
-		// todo there must be a way to know if the transaction is succeeded
-		Status: "0x1",
-
-		// fixme
+		// see Known issues
 		LogsBloom: "",
 	}
 

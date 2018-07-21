@@ -52,15 +52,16 @@ func (t *TransactionCallReq) GetGasPrice() string {
 }
 
 type Log struct {
-	Removed          string   `json:"removed"`          // TAG - true when the log was removed, due to a chain reorganization. false if its a valid log.
-	LogIndex         string   `json:"logIndex"`         // QUANTITY - integer of the log index position in the block. null when its pending log.
-	TransactionIndex string   `json:"transactionIndex"` // QUANTITY - integer of the transactions index position log was created from. null when its pending log.
-	TransactionHash  string   `json:"transactionHash"`  // DATA, 32 Bytes - hash of the transactions this log was created from. null when its pending log.
-	BlockHash        string   `json:"blockHash"`        // DATA, 32 Bytes - hash of the block where this log was in. null when its pending. null when its pending log.
-	BlockNumber      string   `json:"blockNumber"`      // QUANTITY - the block number where this log was in. null when its pending. null when its pending log.
-	Address          string   `json:"address"`          // DATA, 20 Bytes - address from which this log originated.
-	Data             string   `json:"data"`             // DATA - contains one or more 32 Bytes non-indexed arguments of the log.
-	Topics           []string `json:"topics"`           // Array of DATA - Array of 0 to 4 32 Bytes DATA of indexed log arguments.
+	Removed          string   `json:"removed,omitempty"` // TAG - true when the log was removed, due to a chain reorganization. false if its a valid log.
+	LogIndex         string   `json:"logIndex"`          // QUANTITY - integer of the log index position in the block. null when its pending log.
+	TransactionIndex string   `json:"transactionIndex"`  // QUANTITY - integer of the transactions index position log was created from. null when its pending log.
+	TransactionHash  string   `json:"transactionHash"`   // DATA, 32 Bytes - hash of the transactions this log was created from. null when its pending log.
+	BlockHash        string   `json:"blockHash"`         // DATA, 32 Bytes - hash of the block where this log was in. null when its pending. null when its pending log.
+	BlockNumber      string   `json:"blockNumber"`       // QUANTITY - the block number where this log was in. null when its pending. null when its pending log.
+	Address          string   `json:"address"`           // DATA, 20 Bytes - address from which this log originated.
+	Data             string   `json:"data"`              // DATA - contains one or more 32 Bytes non-indexed arguments of the log.
+	Topics           []string `json:"topics"`            // Array of DATA - Array of 0 to 4 32 Bytes DATA of indexed log arguments.
+	Type             string   `json:"type,omitempty"`
 }
 
 type TransactionReceipt struct {

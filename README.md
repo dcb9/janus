@@ -154,5 +154,3 @@ $ curl --header 'Content-Type: application/json' --data \
 
 - [ ] eth_getTransactionReceipt result
   - [ ] logsBloom is an empty string
-  - [ ] status is "0x1"
-  - [ ] only address, topics, data are filled to log items
