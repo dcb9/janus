@@ -4,18 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 
-	"fmt"
-
 	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/go-kit/kit/log"
 )
 
 func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []json.RawMessage
-	if err := json.Unmarshal(req.Params, &params); err != nil {
+	if err := unmarshalRequest(req.Params, &params); err != nil {
 		return nil, err
 	}
 	if len(params) == 0 {
@@ -23,7 +20,7 @@ func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
 	}
 
 	var tx eth.TransactionCallReq
-	if err := json.Unmarshal(params[0], &tx); err != nil {
+	if err := unmarshalRequest(params[0], &tx); err != nil {
 		return nil, err
 	}
 	gasLimit, _, err := EthGasToQtum(&tx)
@@ -33,16 +30,16 @@ func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
 
 	from := tx.From
 
-	if IsEthHex(from) {
-		from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
+	if IsEthHexAddress(from) {
+		from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	newParams, err := json.Marshal([]interface{}{
-		EthHexToQtum(tx.To),
-		EthHexToQtum(tx.Data),
+		RemoveHexPrefix(tx.To),
+		RemoveHexPrefix(tx.Data),
 		from,
 		gasLimit,
 	})
@@ -62,35 +59,18 @@ func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
 	//   3. address              (string, optional) The sender address hex string
 	//   4. gasLimit             (string, optional) The gas limit for executing the contract
 
-	l := log.WithPrefix(m.logger, "method", req.Method)
-
-	return func(result *rpc.JSONRPCResult) error {
-		return m.CallcontractResp(context{
-			logger: l,
-			req:    req,
-		}, result)
-	}, nil
+	return m.CallcontractResp, nil
 }
 
-func (m *Manager) CallcontractResp(c context, result *rpc.JSONRPCResult) error {
-	if result.Error != nil {
-		return result.Error
+func (m *Manager) CallcontractResp(result json.RawMessage) (interface{}, error) {
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
+	}
+	output, err := sj.Get("executionResult").Get("output").String()
+	if err != nil {
+		return nil, err
 	}
 
-	if result.RawResult != nil {
-		sj, err := simplejson.NewJson(result.RawResult)
-		if err != nil {
-			return err
-		}
-		output, err := sj.Get("executionResult").Get("output").Bytes()
-		if err != nil {
-			return err
-		}
-
-		outputStr := fmt.Sprintf(`"0x%s"`, output)
-		result.RawResult = []byte(outputStr)
-		return nil
-	}
-
-	return errors.New("result.RawResult must not be nil")
+	return AddHexPrefix(output), nil
 }

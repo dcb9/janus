@@ -1,4 +1,4 @@
-package proxy
+package server
 
 import (
 	"errors"
@@ -8,31 +8,31 @@ import (
 	"github.com/go-kit/kit/log"
 )
 
-type Option func(*proxy) error
+type Option func(*Server) error
 
 func SetLogger(l log.Logger) Option {
-	return func(p *proxy) error {
+	return func(p *Server) error {
 		p.logger = l
 		return nil
 	}
 }
 
 func SetDebug(debug bool) Option {
-	return func(p *proxy) error {
+	return func(p *Server) error {
 		p.debug = debug
 		return nil
 	}
 }
 
 func setAddress(addr string) Option {
-	return func(p *proxy) error {
+	return func(p *Server) error {
 		p.address = addr
 		return nil
 	}
 }
 
 func setQtumRPC(r string) Option {
-	return func(p *proxy) error {
+	return func(p *Server) error {
 		if r == "" {
 			return errors.New("Please set QTUM_RPC to qtumd's RPC URL")
 		}

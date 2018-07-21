@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -76,7 +77,12 @@ func (c *Client) GetHexAddress(addr string) (string, error) {
 		return "", err
 	}
 
-	return string(res.RawResult), nil
+	var hexAddr string
+	if err = json.Unmarshal(res.RawResult, &hexAddr); err != nil {
+		return "", err
+	}
+
+	return hexAddr, nil
 }
 
 func (c *Client) FromHexAddress(addr string) (string, error) {
@@ -88,27 +94,75 @@ func (c *Client) FromHexAddress(addr string) (string, error) {
 		return "", err
 	}
 
-	return string(res.RawResult), nil
+	var qtumAddr string
+	if err = json.Unmarshal(res.RawResult, &qtumAddr); err != nil {
+		return "", err
+	}
+
+	return qtumAddr, nil
 }
 
-func (c *Client) Request(reqBody *rpc.JSONRPCRequest) (*rpc.JSONRPCResult, error) {
+func (c *Client) GetTransactionReceipt(txHash string) (*TransactionReceipt, error) {
+	r := c.NewRPCRequest(MethodGettransactionreceipt)
+	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, txHash))
+
+	result, err := c.Request(r)
+	if err != nil {
+		return nil, err
+	}
+
+	js, err := simplejson.NewJson(result.RawResult)
+	if err != nil {
+		return nil, err
+	}
+	receiptJSON, err := js.GetIndex(0).Encode()
+	if err != nil {
+		return nil, err
+	}
+	var receipt *TransactionReceipt
+	err = json.Unmarshal(receiptJSON, &receipt)
+	if err != nil {
+		return nil, err
+	}
+
+	return receipt, nil
+}
+func (c *Client) DecodeRawTransaction(hex string) (*Transaction, error) {
+	r := c.NewRPCRequest(MethodDecoderawtransaction)
+	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, hex))
+
+	result, err := c.Request(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var tx *Transaction
+	if err = json.Unmarshal(result.RawResult, &tx); err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (c *Client) Request(reqBody *rpc.JSONRPCRequest) (*rpc.SuccessJSONRPCResult, error) {
 	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := c.do(bytes.NewReader(body))
+	respBody, err := c.do(bytes.NewReader(body))
 	if err != nil {
 		return nil, errors.Wrap(err, "Client#do")
 	}
-	if res.Error != nil {
-		return nil, res.Error
+	res, err := responseBodyToResult(respBody)
+	if err != nil {
+		return nil, errors.Wrap(err, "responseBodyToResult")
 	}
 
 	return res, nil
 }
 
-func (c *Client) do(body io.Reader) (*rpc.JSONRPCResult, error) {
+func (c *Client) do(body io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPost, c.rpcURL, body)
 	if err != nil {
 		return nil, err
@@ -125,17 +179,7 @@ func (c *Client) do(body io.Reader) (*rpc.JSONRPCResult, error) {
 		}
 	}()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var res *rpc.JSONRPCResult
-	if err = json.Unmarshal(respBody, &res); err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return ioutil.ReadAll(resp.Body)
 }
 
 var step = big.NewInt(1)
@@ -149,4 +193,21 @@ func (c *Client) NewRPCRequest(method string) *rpc.JSONRPCRequest {
 		ID:      json.RawMessage(`"` + c.id.String() + `"`),
 		Method:  method,
 	}
+}
+
+func responseBodyToResult(body []byte) (*rpc.SuccessJSONRPCResult, error) {
+	var res *rpc.JSONRPCResult
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, err
+	}
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &rpc.SuccessJSONRPCResult{
+		ID:        res.ID,
+		RawResult: res.RawResult,
+		JSONRPC:   res.JSONRPC,
+	}, nil
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dcb9/janus/pkg/proxy"
+	"github.com/dcb9/janus/pkg/server"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ var (
 
 	qtumRPC = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
 	bind    = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
-	port    = app.Flag("port", "port to serve proxy").Default("9888").Int()
+	port    = app.Flag("port", "port to serve proxy").Default("23889").Int()
 	devMode = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
 )
 
@@ -28,11 +28,11 @@ func action(pc *kingpin.ParseContext) error {
 		logger = level.NewFilter(logger, level.AllowWarn())
 	}
 
-	s, err := proxy.New(
+	s, err := server.New(
 		*qtumRPC,
 		addr,
-		proxy.SetLogger(logger),
-		proxy.SetDebug(*devMode),
+		server.SetLogger(logger),
+		server.SetDebug(*devMode),
 	)
 
 	if err != nil {

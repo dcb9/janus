@@ -1,8 +1,6 @@
 package transformer
 
 import (
-	"encoding/json"
-
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
@@ -47,12 +45,12 @@ func (m *Manager) TransformRequest(rpcReq *rpc.JSONRPCRequest) (ResponseTransfor
 		return trafo(rpcReq)
 	}
 
-	return NopRequestTransformer(nil)
+	return nil, nil
 }
 
 func (m *Manager) SendTransaction(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var txs []*eth.TransactionReq
-	if err := json.Unmarshal(req.Params, &txs); err != nil {
+	if err := unmarshalRequest(req.Params, &txs); err != nil {
 		return nil, err
 	}
 	if len(txs) == 0 {
@@ -86,4 +84,11 @@ func SetLogger(l log.Logger) func(*Manager) error {
 		m.logger = log.WithPrefix(l, "component", "transformer")
 		return nil
 	}
+}
+
+func (m *Manager) getQtumWalletAddress(addr string) (string, error) {
+	if IsEthHexAddress(addr) {
+		return m.qtumClient.FromHexAddress(RemoveHexPrefix(addr))
+	}
+	return addr, nil
 }

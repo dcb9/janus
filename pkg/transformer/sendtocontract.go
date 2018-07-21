@@ -2,12 +2,12 @@ package transformer
 
 import (
 	"encoding/json"
-	"strings"
 
+	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/go-kit/kit/log"
+	"github.com/pkg/errors"
 )
 
 func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
@@ -16,28 +16,31 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		return nil, err
 	}
 
-	amount := 0
+	amount := 0.0
 	if tx.Value != "" {
-		v := EthHexToQtum(tx.Value)
-		_ = v
-		// FIXME
-		// amount = v
+		var err error
+		amount, err = EthValueToQtumAmount(tx.Value)
+		if err != nil {
+			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
+		}
 	}
+
 	params := []interface{}{
-		EthHexToQtum(tx.To),
-		EthHexToQtum(tx.Data),
+		RemoveHexPrefix(tx.To),
+		RemoveHexPrefix(tx.Data),
 		amount,
 		gasLimit,
 		gasPrice,
 	}
 
-	if tx.From != "" {
-		sender := tx.From
-		if strings.HasPrefix(sender, "0x") {
-			// todo convert hexaddress
+	if from := tx.From; from != "" {
+		if IsEthHexAddress(from) {
+			from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
+			if err != nil {
+				return nil, err
+			}
 		}
-
-		params = append(params, sender)
+		params = append(params, from)
 	}
 
 	newParams, err := json.Marshal(params)
@@ -48,17 +51,20 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 	req.Params = newParams
 	req.Method = qtum.MethodSendtocontract
 
-	l := log.WithPrefix(m.logger, "method", req.Method)
-	return func(result *rpc.JSONRPCResult) error {
-		return m.SendtocontractResp(context{
-			logger: l,
-			req:    req,
-		}, result)
-	}, nil
+	return m.SendtocontractResp, nil
 }
 
-func (m *Manager) SendtocontractResp(c context, result *rpc.JSONRPCResult) error {
-	return nil
+func (m *Manager) SendtocontractResp(result json.RawMessage) (interface{}, error) {
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
+	}
+	txid, err := sj.Get("txid").String()
+	if err != nil {
+		return nil, err
+	}
+
+	return AddHexPrefix(txid), nil
 }
 
 //  Eth RPC

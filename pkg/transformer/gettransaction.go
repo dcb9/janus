@@ -2,25 +2,27 @@ package transformer
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"math/big"
+
+	"github.com/bitly/go-simplejson"
+	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/go-kit/kit/log"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 )
 
 func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []string
-	if err := json.Unmarshal(req.Params, &params); err != nil {
+	if err := unmarshalRequest(req.Params, &params); err != nil {
 		return nil, err
 	}
 	if len(params) == 0 {
 		return nil, errors.New("params must be set")
 	}
 
-	txid := EthHexToQtum(params[0])
+	txid := RemoveHexPrefix(params[0])
 	newParams, err := json.Marshal([]interface{}{
 		txid,
 	})
@@ -31,36 +33,103 @@ func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransfo
 	req.Params = newParams
 	req.Method = qtum.MethodGettransaction
 
-	l := log.WithPrefix(m.logger, "method", req.Method)
-	return func(result *rpc.JSONRPCResult) error {
-		return m.GettransactionResp(context{
-			logger: l,
-			req:    req,
-		}, result)
-	}, nil
+	return m.GettransactionResp, nil
 }
 
-func (m *Manager) GettransactionResp(c context, result *rpc.JSONRPCResult) error {
-	if result.Error != nil {
-		return result.Error
+func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error) {
+	var err error
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
+	}
+	txid, err := sj.Get("txid").String()
+	if err != nil {
+		return nil, err
+	}
+	blockHash, err := sj.Get("blockhash").String()
+	if err != nil {
+		return nil, err
+	}
+	hexField, err := sj.Get("hex").String()
+	if err != nil {
+		return nil, err
 	}
 
-	if result.RawResult != nil {
-		sj, err := simplejson.NewJson(result.RawResult)
-		if err != nil {
-			return err
-		}
-		txid, err := sj.Get("txid").Bytes()
-		if err != nil {
-			return err
-		}
-
-		txidStr := fmt.Sprintf(`"0x%s"`, txid)
-		result.RawResult = []byte(txidStr)
-		return nil
+	amount, err := sj.Get("amount").Float64()
+	if err != nil {
+		return nil, err
+	}
+	ethVal, err := QtumAmountToEthValue(amount)
+	if err != nil {
+		return nil, err
 	}
 
-	return errors.New("result.RawResult must not be nil")
+	tx, err := m.qtumClient.DecodeRawTransaction(hexField)
+	if err != nil {
+		return nil, errors.Wrap(err, "Manager#GettransactionResp")
+	}
+	var gas, gasPrice, input string
+	type asmWithGasGasPriceEncodedABI interface {
+		GetEncodedABI() string
+		GetGasPrice() (*big.Int, error)
+		GetGasLimit() (*big.Int, error)
+	}
+
+	var asm asmWithGasGasPriceEncodedABI
+	for _, out := range tx.Vout {
+		switch out.ScriptPubKey.Type {
+		case "call":
+			if asm, err = qtum.ParseCallASM(out.ScriptPubKey.Asm); err != nil {
+				return nil, err
+			}
+		case "create":
+			if asm, err = qtum.ParseCreateASM(out.ScriptPubKey.Asm); err != nil {
+				return nil, err
+			}
+		default:
+			continue
+		}
+		break
+	}
+
+	if asm != nil {
+		input = AddHexPrefix(asm.GetEncodedABI())
+		gasLimitBigInt, err := asm.GetGasLimit()
+		if err != nil {
+			return nil, err
+		}
+		gasPriceBigInt, err := asm.GetGasPrice()
+		if err != nil {
+			return nil, err
+		}
+		gas = hexutil.EncodeBig(gasLimitBigInt)
+		gasPrice = hexutil.EncodeBig(gasPriceBigInt)
+	}
+
+	ethTxResp := eth.TransactionResponse{
+		Hash:      AddHexPrefix(txid),
+		BlockHash: AddHexPrefix(blockHash),
+		Nonce:     "",
+		Value:     ethVal,
+		Input:     input,
+		Gas:       gas,
+		GasPrice:  gasPrice,
+	}
+
+	if asm != nil {
+		receipt, err := m.qtumClient.GetTransactionReceipt(txid)
+		if err != nil {
+			return nil, err
+		}
+		if receipt != nil {
+			ethTxResp.BlockNumber = hexutil.EncodeUint64(receipt.BlockNumber)
+			ethTxResp.TransactionIndex = hexutil.EncodeUint64(receipt.TransactionIndex)
+			ethTxResp.From = AddHexPrefix(receipt.From)
+			ethTxResp.To = AddHexPrefix(receipt.ContractAddress)
+		}
+	}
+
+	return &ethTxResp, nil
 }
 
 //Qtum RPC
