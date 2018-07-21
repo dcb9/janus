@@ -20,7 +20,7 @@ func TestEthHexToQtum(t *testing.T) {
 
 	for _, c := range cases {
 		in, want := c["in"], c["want"]
-		if got := EthHexToQtum(in); got != want {
+		if got := RemoveHexPrefix(in); got != want {
 			t.Fatal("err: in: %s, want: %s, got: %s", in, want, got)
 		}
 	}

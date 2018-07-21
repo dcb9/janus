@@ -147,8 +147,6 @@ $ curl --header 'Content-Type: application/json' --data \
 
 - [ ] transform eth_getTransactionByHash result
 - [ ] qtum sendtoaddress method
-- [ ] gas and gasPrice
-- [ ] sendtocontract amount
 
 ## Known issues
 

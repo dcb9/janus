@@ -30,16 +30,16 @@ func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
 
 	from := tx.From
 
-	if IsEthHex(from) {
-		from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
+	if IsEthHexAddress(from) {
+		from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	newParams, err := json.Marshal([]interface{}{
-		EthHexToQtum(tx.To),
-		EthHexToQtum(tx.Data),
+		RemoveHexPrefix(tx.To),
+		RemoveHexPrefix(tx.Data),
 		from,
 		gasLimit,
 	})
@@ -72,5 +72,5 @@ func (m *Manager) CallcontractResp(result json.RawMessage) (interface{}, error) 
 		return nil, err
 	}
 
-	return QtumHexToEth(output), nil
+	return AddHexPrefix(output), nil
 }

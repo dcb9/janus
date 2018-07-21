@@ -7,6 +7,7 @@ import (
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/pkg/errors"
 )
 
 func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
@@ -15,23 +16,26 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		return nil, err
 	}
 
-	amount := 0
+	amount := 0.0
 	if tx.Value != "" {
-		// TODO
-		// amount = tx.Value
+		var err error
+		amount, err = EthValueToQtumAmount(tx.Value)
+		if err != nil {
+			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
+		}
 	}
 
 	params := []interface{}{
-		EthHexToQtum(tx.To),
-		EthHexToQtum(tx.Data),
+		RemoveHexPrefix(tx.To),
+		RemoveHexPrefix(tx.Data),
 		amount,
 		gasLimit,
 		gasPrice,
 	}
 
 	if from := tx.From; from != "" {
-		if IsEthHex(from) {
-			from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
+		if IsEthHexAddress(from) {
+			from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +64,7 @@ func (m *Manager) SendtocontractResp(result json.RawMessage) (interface{}, error
 		return nil, err
 	}
 
-	return QtumHexToEth(txid), nil
+	return AddHexPrefix(txid), nil
 }
 
 //  Eth RPC

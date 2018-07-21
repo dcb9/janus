@@ -19,7 +19,7 @@ func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransfo
 		return nil, errors.New("params must be set")
 	}
 
-	txid := EthHexToQtum(params[0])
+	txid := RemoveHexPrefix(params[0])
 	newParams, err := json.Marshal([]interface{}{
 		txid,
 	})
@@ -49,8 +49,8 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 	}
 
 	ethTxResp := eth.TransactionResponse{
-		Hash:      QtumHexToEth(txid),
-		BlockHash: QtumHexToEth(blockHash),
+		Hash:      AddHexPrefix(txid),
+		BlockHash: AddHexPrefix(blockHash),
 	}
 
 	return &ethTxResp, nil

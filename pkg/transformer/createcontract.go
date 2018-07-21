@@ -22,15 +22,15 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		return nil, err
 	}
 	params := []interface{}{
-		EthHexToQtum(tx.Data),
+		RemoveHexPrefix(tx.Data),
 		gasLimit,
 		gasPrice,
 	}
 
 	if tx.From != "" {
 		from := tx.From
-		if IsEthHex(from) {
-			from, err = m.qtumClient.FromHexAddress(EthHexToQtum(from))
+		if IsEthHexAddress(from) {
+			from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +60,7 @@ func (m *Manager) CreatecontractResp(result json.RawMessage) (interface{}, error
 		return nil, err
 	}
 
-	return QtumHexToEth(txid), nil
+	return AddHexPrefix(txid), nil
 }
 
 //  Eth RPC

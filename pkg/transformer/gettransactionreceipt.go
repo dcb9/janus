@@ -24,7 +24,7 @@ func (m *Manager) GetTransactionReceipt(req *rpc.JSONRPCRequest) (ResponseTransf
 	}
 
 	newParams, err := json.Marshal([]string{
-		EthHexToQtum(params[0]),
+		RemoveHexPrefix(params[0]),
 	})
 	if err != nil {
 		return nil, err
@@ -100,26 +100,26 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 	for index, log := range qtumLogs {
 		topics := make([]string, 0, len(log.Topics))
 		for _, topic := range log.Topics {
-			topics = append(topics, QtumHexToEth(topic))
+			topics = append(topics, AddHexPrefix(topic))
 		}
 		logs = append(logs, eth.Log{
-			TransactionHash:  QtumHexToEth(transactionHash),
+			TransactionHash:  AddHexPrefix(transactionHash),
 			TransactionIndex: hexutil.EncodeUint64(transactionIndex),
-			BlockHash:        QtumHexToEth(blockHash),
+			BlockHash:        AddHexPrefix(blockHash),
 			BlockNumber:      hexutil.EncodeUint64(blockNumber),
-			Data:             QtumHexToEth(log.Data),
-			Address:          QtumHexToEth(log.Address),
+			Data:             AddHexPrefix(log.Data),
+			Address:          AddHexPrefix(log.Address),
 			Topics:           topics,
 			LogIndex:         hexutil.EncodeUint64(uint64(index)),
 		})
 	}
 
 	ethTxReceipt := eth.TransactionReceipt{
-		TransactionHash:   QtumHexToEth(transactionHash),
+		TransactionHash:   AddHexPrefix(transactionHash),
 		TransactionIndex:  hexutil.EncodeUint64(transactionIndex),
-		BlockHash:         QtumHexToEth(blockHash),
+		BlockHash:         AddHexPrefix(blockHash),
 		BlockNumber:       hexutil.EncodeUint64(blockNumber),
-		ContractAddress:   QtumHexToEth(contractAddress),
+		ContractAddress:   AddHexPrefix(contractAddress),
 		CumulativeGasUsed: hexutil.EncodeUint64(cumulativeGasUsed),
 		GasUsed:           hexutil.EncodeUint64(gasUsed),
 		Logs:              logs,
