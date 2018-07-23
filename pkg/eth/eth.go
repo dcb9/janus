@@ -2,8 +2,12 @@ package eth
 
 import (
 	"encoding/json"
+	"errors"
+	"math/big"
+	"strings"
 
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 func NewJSONRPCResult(id, rawResult json.RawMessage, err *rpc.JSONRPCError) *rpc.JSONRPCResult {
@@ -17,13 +21,13 @@ func NewJSONRPCResult(id, rawResult json.RawMessage, err *rpc.JSONRPCError) *rpc
 
 // eth_sendTransaction
 type TransactionReq struct {
-	From     string `json:"from"`
-	To       string `json:"to"`
-	Gas      string `json:"gas"`      // optional
-	GasPrice string `json:"gasPrice"` // optional
-	Value    string `json:"value"`    // optional
-	Data     string `json:"data"`     // optional
-	Nonce    string `json:"nonce"`    // optional
+	From     string  `json:"from"`
+	To       string  `json:"to"`
+	Gas      *EthInt `json:"gas"`      // optional
+	GasPrice *EthInt `json:"gasPrice"` // optional
+	Value    string  `json:"value"`    // optional
+	Data     string  `json:"data"`     // optional
+	Nonce    string  `json:"nonce"`    // optional
 }
 
 // see: https://ethereum.stackexchange.com/questions/8384/transfer-an-amount-between-two-ethereum-accounts-using-json-rpc
@@ -41,29 +45,29 @@ func (t *TransactionReq) IsCallContract() bool {
 }
 
 func (t *TransactionReq) GetGas() string {
-	return t.Gas
+	return t.Gas.Hex()
 }
 
 func (t *TransactionReq) GetGasPrice() string {
-	return t.GasPrice
+	return t.GasPrice.Hex()
 }
 
 // eth_call
 type TransactionCallReq struct {
-	From     string `json:"from"`
-	To       string `json:"to"`
-	Gas      string `json:"gas"`      // optional
-	GasPrice string `json:"gasPrice"` // optional
-	Value    string `json:"value"`    // optional
-	Data     string `json:"data"`     // optional
+	From     string  `json:"from"`
+	To       string  `json:"to"`
+	Gas      *EthInt `json:"gas"`      // optional
+	GasPrice *EthInt `json:"gasPrice"` // optional
+	Value    string  `json:"value"`    // optional
+	Data     string  `json:"data"`     // optional
 }
 
 func (t *TransactionCallReq) GetGas() string {
-	return t.Gas
+	return t.Gas.Hex()
 }
 
 func (t *TransactionCallReq) GetGasPrice() string {
-	return t.GasPrice
+	return t.GasPrice.Hex()
 }
 
 type Log struct {
@@ -107,4 +111,53 @@ type TransactionResponse struct {
 	GasPrice         string `json:"gasPrice"`         // QUANTITY - gas price provided by the sender in Wei.
 	Gas              string `json:"gas"`              // QUANTITY - gas provided by the sender.
 	Input            string `json:"input"`            // DATA - the data send along with the transaction.
+}
+
+type EthInt big.Int
+
+func (i *EthInt) Hex() string {
+	return hexutil.EncodeBig(i.ToBigInt())
+}
+
+func (i *EthInt) ToBigInt() *big.Int {
+	v := *i
+	vv := big.Int(v)
+	return &vv
+}
+
+func (i *EthInt) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.ToBigInt())
+}
+
+func (i *EthInt) UnmarshalJSON(data []byte) (err error) {
+	if len(data) == 0 {
+		return errors.New("data must not be empty")
+	}
+
+	if data[0] != '"' && data[len(data)-1] != '"' {
+		var v *big.Int
+		if err = json.Unmarshal(data, &v); err != nil {
+			return err
+		}
+		vv := *v
+		*i = EthInt(vv)
+		return
+	}
+
+	// hex
+	var val string
+	if err = json.Unmarshal(data, &val); err != nil {
+		return err
+	}
+	if !strings.HasPrefix(val, "0x") {
+		val = "0x" + val
+	}
+
+	v, err := hexutil.DecodeBig(val)
+	if err != nil {
+		return err
+	}
+	vv := *v
+	*i = EthInt(vv)
+	return err
 }

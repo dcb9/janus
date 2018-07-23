@@ -21,6 +21,8 @@ const (
 	MethodSendtoaddress         = "sendtoaddress"
 	MethodCallcontract          = "callcontract"
 	MethodDecoderawtransaction  = "decoderawtransaction"
+	MethodGetblockcount         = "getblockcount"
+	MethodGetblockchaininfo     = "getblockchaininfo"
 )
 
 type (
@@ -86,7 +88,7 @@ type (
 		Label     string  `json:"label"`
 		Vout      int64   `json:"vout"`
 		Fee       float64 `json:"fee"`
-		Abandoned int64   `json:"abandoned"`
+		Abandoned bool    `json:"abandoned"`
 	}
 
 	Transaction struct {
@@ -119,6 +121,39 @@ type (
 	CreateASM struct {
 		ASM
 		EncodedABI string
+	}
+
+	BlockChainInfo struct {
+		Bestblockhash string `json:"bestblockhash"`
+		Bip9Softforks struct {
+			Csv struct {
+				Since     int64  `json:"since"`
+				StartTime int64  `json:"startTime"`
+				Status    string `json:"status"`
+				Timeout   int64  `json:"timeout"`
+			} `json:"csv"`
+			Segwit struct {
+				Since     int64  `json:"since"`
+				StartTime int64  `json:"startTime"`
+				Status    string `json:"status"`
+				Timeout   int64  `json:"timeout"`
+			} `json:"segwit"`
+		} `json:"bip9_softforks"`
+		Blocks     int64   `json:"blocks"`
+		Chain      string  `json:"chain"`
+		Chainwork  string  `json:"chainwork"`
+		Difficulty float64 `json:"difficulty"`
+		Headers    int64   `json:"headers"`
+		Mediantime int64   `json:"mediantime"`
+		Pruned     bool    `json:"pruned"`
+		Softforks  []struct {
+			ID     string `json:"id"`
+			Reject struct {
+				Status bool `json:"status"`
+			} `json:"reject"`
+			Version int64 `json:"version"`
+		} `json:"softforks"`
+		Verificationprogress int64 `json:"verificationprogress"`
 	}
 )
 

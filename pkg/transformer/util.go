@@ -86,7 +86,7 @@ func AddHexPrefix(hex string) string {
 
 func unmarshalRequest(data []byte, v interface{}) error {
 	if err := json.Unmarshal(data, v); err != nil {
-		return UnmarshalRequestErr
+		return errors.Wrap(UnmarshalRequestErr, err.Error())
 	}
 	return nil
 }

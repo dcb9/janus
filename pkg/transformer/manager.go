@@ -2,11 +2,13 @@ package transformer
 
 import (
 	"encoding/json"
+	"math/big"
 
-	simplejson "github.com/bitly/go-simplejson"
+	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 )
@@ -32,6 +34,8 @@ func NewManager(qtumClient *qtum.Client, opts ...func(*Manager) error) (*Manager
 		"eth_call":                  m.Call,
 		"eth_getTransactionByHash":  m.GetTransactionByHash,
 		"eth_getTransactionReceipt": m.GetTransactionReceipt,
+		"eth_blockNumber":           m.BlockNumber,
+		"net_version":               m.NetVersion,
 	}
 
 	for _, opt := range opts {
@@ -91,6 +95,31 @@ func (m *Manager) sendTransactionResp(result json.RawMessage) (interface{}, erro
 	}
 
 	return AddHexPrefix(txid), nil
+}
+
+func (m *Manager) BlockNumber(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
+	req.Method = qtum.MethodGetblockcount
+
+	return func(result json.RawMessage) (newResult interface{}, err error) {
+		var n *big.Int
+		if err := json.Unmarshal(result, &n); err != nil {
+			return nil, err
+		}
+		return hexutil.EncodeBig(n), nil
+	}, nil
+}
+
+func (m *Manager) NetVersion(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
+	req.Method = qtum.MethodGetblockchaininfo
+
+	return func(result json.RawMessage) (newResult interface{}, err error) {
+		var i *qtum.BlockChainInfo
+		if err := json.Unmarshal(result, &i); err != nil {
+			return nil, err
+		}
+
+		return i.Chain, nil
+	}, nil
 }
 
 func SetDebug(debug bool) func(*Manager) error {
