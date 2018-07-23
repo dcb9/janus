@@ -7,6 +7,79 @@ Qtum adapter to Ethereum JSON RPC
 $ go run cli/janus/main.go --qtum-rpc="http://qtum:test@localhost:3889" --port=23889  --dev
 ```
 
+## Interact with QtumJS
+
+```
+$ cd playground
+$ sh deploy-SimpleStore.sh
+  + solar deploy ./contracts/SimpleStore.sol '["1"]' --gasPrice=0.0000001 --force
+  exec: solc [./contracts/SimpleStore.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/dcb9/janus/playground]
+  cli gasPrice 0.0000001 1e-07
+  gasPrice 1e-07 100
+  gasPriceWei 100
+  txHash: 0x95472d05243864764211bd8c6d8110fa397bd045cff78d845c1250bdff789bc7
+  contractAddress: 0x6997a4803d75964b8d093a939c227a16833d23ad
+  🚀  All contracts confirmed
+     deployed ./contracts/SimpleStore.sol => 0x6997a4803d75964b8d093a939c227a16833d23ad
+
+$ vim test-SimpleStore.js # set your qtum account
+
+$ node test-SimpleStore.js
+exec: await simpleStoreContract.call("get", [], {gasPrice: 100})
+call { rawResult: '0x0000000000000000000000000000000000000000000000000000000000000001',
+  outputs: [ <BN: 1> ],
+  logs: [] }
+
+exec: await simpleStoreContract.send("set", [82009999], {gasPrice: 100})
+tx { hash: '0x23a0d715ef4fc2ce8bcf79bf1427e3fea6af38905efab9668672e693591f3ee4',
+  nonce: '',
+  blockHash: '0x',
+  blockNumber: '',
+  transactionIndex: '',
+  from: '',
+  to: '',
+  value: '0x0',
+  gasPrice: '0x64',
+  gas: '0x30d40',
+  input: '0x60fe47b10000000000000000000000000000000000000000000000000000000004e35f8f',
+  method: 'set',
+  confirm: [Function: confirm] }
+
+exec: await tx.confirm(0)
+receipt { transactionHash: '0x23a0d715ef4fc2ce8bcf79bf1427e3fea6af38905efab9668672e693591f3ee4',
+  transactionIndex: '0x2',
+  blockHash: '0x6b8273375b3a8dff6701c4151d03aa2e3211fbb3f2bea558d16a762fe0cd2b1a',
+  blockNumber: '0x2eaf',
+  cumulativeGasUsed: '0x702e',
+  gasUsed: '0x702e',
+  contractAddress: '0x6997a4803d75964b8d093a939c227a16833d23ad',
+  logsBloom: '',
+  status: '0x1',
+  from: '0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19',
+  to: '0x6997a4803d75964b8d093a939c227a16833d23ad',
+  logs:
+   [ Result {
+       from: '0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19',
+       _oldValue: <BN: 1>,
+       _newValue: <BN: 4e35f8f>,
+       type: 'UpdateValue' } ],
+  rawlogs:
+   [ { logIndex: '0x0',
+       transactionIndex: '0x2',
+       transactionHash: '0x23a0d715ef4fc2ce8bcf79bf1427e3fea6af38905efab9668672e693591f3ee4',
+       blockHash: '0x6b8273375b3a8dff6701c4151d03aa2e3211fbb3f2bea558d16a762fe0cd2b1a',
+       blockNumber: '0x2eaf',
+       address: '0x6997a4803d75964b8d093a939c227a16833d23ad',
+       data: '0x000000000000000000000000cb3cb8375fe457a11f041f9ff55373e1a5a78d190000000000000000000000000000000000000000000000000000000000000001',
+       topics: [Array] } ] }
+
+exec: await simpleStoreContract.call("get", [], {gasPrice: 100})
+call { rawResult: '0x0000000000000000000000000000000000000000000000000000000004e35f8f',
+  outputs: [ <BN: 4e35f8f> ],
+  logs: [] }
+
+```
+
 ## Try to interact with contract
 
 see: [Qtum smart contract](http://book.qtum.site/en/part4/smart-contract.html)
