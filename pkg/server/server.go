@@ -17,6 +17,7 @@ type Server struct {
 	qtumClient         *qtum.Client
 	logger             log.Logger
 	debug              bool
+	echo               *echo.Echo
 }
 
 func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
@@ -24,6 +25,7 @@ func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 
 	p := &Server{
 		logger: log.NewNopLogger(),
+		echo:   echo.New(),
 	}
 
 	var err error
@@ -55,10 +57,11 @@ func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 }
 
 func (s *Server) Start() error {
-	e := echo.New()
+	e := s.echo
+
 	e.HideBanner = true
-	e.POST("/*", s.httpHandler)
-	e.HTTPErrorHandler = s.errorHandler
+	e.POST("/*", s.myCtxHandler(httpHandler))
+	e.HTTPErrorHandler = errorHandler
 
 	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPC, "msg", "proxy started")
 	return e.Start(s.address)

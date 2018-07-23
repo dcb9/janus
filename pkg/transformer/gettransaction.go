@@ -5,7 +5,6 @@ import (
 
 	"math/big"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
@@ -37,34 +36,18 @@ func (m *Manager) GetTransactionByHash(req *rpc.JSONRPCRequest) (ResponseTransfo
 }
 
 func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error) {
-	var err error
-	sj, err := simplejson.NewJson(result)
-	if err != nil {
-		return nil, err
-	}
-	txid, err := sj.Get("txid").String()
-	if err != nil {
-		return nil, err
-	}
-	blockHash, err := sj.Get("blockhash").String()
-	if err != nil {
-		return nil, err
-	}
-	hexField, err := sj.Get("hex").String()
+	var tx *qtum.Transaction
+	err := json.Unmarshal(result, &tx)
 	if err != nil {
 		return nil, err
 	}
 
-	amount, err := sj.Get("amount").Float64()
-	if err != nil {
-		return nil, err
-	}
-	ethVal, err := QtumAmountToEthValue(amount)
+	ethVal, err := QtumAmountToEthValue(tx.Amount)
 	if err != nil {
 		return nil, err
 	}
 
-	tx, err := m.qtumClient.DecodeRawTransaction(hexField)
+	decodedRawTx, err := m.qtumClient.DecodeRawTransaction(tx.Hex)
 	if err != nil {
 		return nil, errors.Wrap(err, "Manager#GettransactionResp")
 	}
@@ -76,7 +59,7 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 	}
 
 	var asm asmWithGasGasPriceEncodedABI
-	for _, out := range tx.Vout {
+	for _, out := range decodedRawTx.Vout {
 		switch out.ScriptPubKey.Type {
 		case "call":
 			if asm, err = qtum.ParseCallASM(out.ScriptPubKey.Asm); err != nil {
@@ -107,8 +90,8 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 	}
 
 	ethTxResp := eth.TransactionResponse{
-		Hash:      AddHexPrefix(txid),
-		BlockHash: AddHexPrefix(blockHash),
+		Hash:      AddHexPrefix(tx.Txid),
+		BlockHash: AddHexPrefix(tx.Blockhash),
 		Nonce:     "",
 		Value:     ethVal,
 		Input:     input,
@@ -117,7 +100,7 @@ func (m *Manager) GettransactionResp(result json.RawMessage) (interface{}, error
 	}
 
 	if asm != nil {
-		receipt, err := m.qtumClient.GetTransactionReceipt(txid)
+		receipt, err := m.qtumClient.GetTransactionReceipt(tx.Txid)
 		if err != nil {
 			return nil, err
 		}

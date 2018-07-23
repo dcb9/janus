@@ -44,7 +44,7 @@ type (
 		Data    string   `json:"data"`
 	}
 
-	TransactionInV struct {
+	DecodedRawTransactionInV struct {
 		Txid      string `json:"txid"`
 		Vout      int64  `json:"vout"`
 		ScriptSig struct {
@@ -55,7 +55,7 @@ type (
 		Sequence    int64    `json:"sequence"`
 	}
 
-	TransactionOutV struct {
+	DecodedRawTransactionOutV struct {
 		Value        float64 `json:"value"`
 		N            int64   `json:"n"`
 		ScriptPubKey struct {
@@ -67,15 +67,41 @@ type (
 		} `json:"scriptPubKey"`
 	}
 
+	DecodedRawTransaction struct {
+		Txid     string                       `json:"txid"`
+		Hash     string                       `json:"hash"`
+		Size     int64                        `json:"size"`
+		Vsize    int64                        `json:"vsize"`
+		Version  int64                        `json:"version"`
+		Locktime int64                        `json:"locktime"`
+		Vin      []*DecodedRawTransactionInV  `json:"vin"`
+		Vout     []*DecodedRawTransactionOutV `json:"vout"`
+	}
+
+	TransactionDetail struct {
+		Account   string  `json:"account"`
+		Address   string  `json:"address"`
+		Category  string  `json:"category"`
+		Amount    float64 `json:"amount"`
+		Label     string  `json:"label"`
+		Vout      int64   `json:"vout"`
+		Fee       float64 `json:"fee"`
+		Abandoned int64   `json:"abandoned"`
+	}
+
 	Transaction struct {
-		Txid     string             `json:"txid"`
-		Hash     string             `json:"hash"`
-		Size     int64              `json:"size"`
-		Vsize    int64              `json:"vsize"`
-		Version  int64              `json:"version"`
-		Locktime int64              `json:"locktime"`
-		Vin      []*TransactionInV  `json:"vin"`
-		Vout     []*TransactionOutV `json:"vout"`
+		Amount            float64              `json:"amount"`
+		Fee               float64              `json:"fee"`
+		Confirmations     int64                `json:"confirmations"`
+		Blockhash         string               `json:"blockhash"`
+		Blockindex        int64                `json:"blockindex"`
+		Blocktime         int64                `json:"blocktime"`
+		Txid              string               `json:"txid"`
+		Time              int64                `json:"time"`
+		Timereceived      int64                `json:"timereceived"`
+		Bip125Replaceable string               `json:"bip125-replaceable"`
+		Details           []*TransactionDetail `json:"details"`
+		Hex               string               `json:"hex"`
 	}
 
 	ASM struct {
