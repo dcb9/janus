@@ -1,5 +1,20 @@
 package eth
 
+import (
+	"encoding/json"
+
+	"github.com/dcb9/janus/pkg/rpc"
+)
+
+func NewJSONRPCResult(id, rawResult json.RawMessage, err *rpc.JSONRPCError) *rpc.JSONRPCResult {
+	return &rpc.JSONRPCResult{
+		JSONRPC:   "2.0",
+		ID:        id,
+		RawResult: rawResult,
+		Error:     err,
+	}
+}
+
 // eth_sendTransaction
 type TransactionReq struct {
 	From     string `json:"from"`

@@ -3,15 +3,14 @@ package transformer
 import (
 	"encoding/json"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
 )
 
-func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
+func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) error {
 	if tx.Value != "" && tx.Value != "0x0" {
-		return nil, &rpc.JSONRPCError{
+		return &rpc.JSONRPCError{
 			Code:    rpc.ErrInvalid,
 			Message: "value must be empty",
 		}
@@ -19,7 +18,7 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 
 	gasLimit, gasPrice, err := EthGasToQtum(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	params := []interface{}{
 		RemoveHexPrefix(tx.Data),
@@ -32,7 +31,7 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		if IsEthHexAddress(from) {
 			from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 
@@ -41,26 +40,13 @@ func (m *Manager) createcontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 
 	newParams, err := json.Marshal(params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	req.Params = newParams
 	req.Method = qtum.MethodCreatecontract
 
-	return m.CreatecontractResp, nil
-}
-
-func (m *Manager) CreatecontractResp(result json.RawMessage) (interface{}, error) {
-	sj, err := simplejson.NewJson(result)
-	if err != nil {
-		return nil, err
-	}
-	txid, err := sj.Get("txid").String()
-	if err != nil {
-		return nil, err
-	}
-
-	return AddHexPrefix(txid), nil
+	return nil
 }
 
 //  Eth RPC

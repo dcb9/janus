@@ -30,7 +30,7 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	if err != nil {
 		return nil, "0.0", err
 	}
-	gasPrice = fmt.Sprintf("%f", gasPriceFloat64)
+	gasPrice = fmt.Sprintf("%.8f", gasPriceFloat64)
 
 	return
 }

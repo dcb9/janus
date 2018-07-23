@@ -3,17 +3,16 @@ package transformer
 import (
 	"encoding/json"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/pkg/errors"
 )
 
-func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
+func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) error {
 	gasLimit, gasPrice, err := EthGasToQtum(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	amount := 0.0
@@ -21,7 +20,7 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		var err error
 		amount, err = EthValueToQtumAmount(tx.Value)
 		if err != nil {
-			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
+			return errors.Wrap(err, "EthValueToQtumAmount:")
 		}
 	}
 
@@ -37,7 +36,7 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 		if IsEthHexAddress(from) {
 			from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 		params = append(params, from)
@@ -45,26 +44,13 @@ func (m *Manager) sendtocontract(req *rpc.JSONRPCRequest, tx *eth.TransactionReq
 
 	newParams, err := json.Marshal(params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	req.Params = newParams
 	req.Method = qtum.MethodSendtocontract
 
-	return m.SendtocontractResp, nil
-}
-
-func (m *Manager) SendtocontractResp(result json.RawMessage) (interface{}, error) {
-	sj, err := simplejson.NewJson(result)
-	if err != nil {
-		return nil, err
-	}
-	txid, err := sj.Get("txid").String()
-	if err != nil {
-		return nil, err
-	}
-
-	return AddHexPrefix(txid), nil
+	return nil
 }
 
 //  Eth RPC

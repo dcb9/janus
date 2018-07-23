@@ -44,7 +44,7 @@ func (m *Manager) GetTransactionReceipt(req *rpc.JSONRPCRequest) (ResponseTransf
 
 func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}, error) {
 	if string(result) == "[]" {
-		return []string{}, nil
+		return nil, nil
 	}
 
 	sj, err := simplejson.NewJson(result)

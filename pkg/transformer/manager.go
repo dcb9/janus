@@ -1,6 +1,9 @@
 package transformer
 
 import (
+	"encoding/json"
+
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/rpc"
@@ -57,19 +60,37 @@ func (m *Manager) SendTransaction(req *rpc.JSONRPCRequest) (ResponseTransformerF
 		return nil, errors.New("params must be set")
 	}
 
+	var err error
 	t := txs[0]
 	if t.IsCreateContract() {
-		return m.createcontract(req, t)
+		err = m.createcontract(req, t)
 	} else if t.IsSendEther() {
-		return m.sendtoaddress(req, t)
+		err = m.sendtoaddress(req, t)
 	} else if t.IsCallContract() {
-		return m.sendtocontract(req, t)
+		err = m.sendtocontract(req, t)
+	} else {
+		err = &rpc.JSONRPCError{
+			Code:    rpc.ErrUnknownOperation,
+			Message: "unknown operation",
+		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, &rpc.JSONRPCError{
-		Code:    rpc.ErrUnknownOperation,
-		Message: "unknown operation",
+	return m.sendTransactionResp, nil
+}
+func (m *Manager) sendTransactionResp(result json.RawMessage) (interface{}, error) {
+	sj, err := simplejson.NewJson(result)
+	if err != nil {
+		return nil, err
 	}
+	txid, err := sj.Get("txid").String()
+	if err != nil {
+		return nil, err
+	}
+
+	return AddHexPrefix(txid), nil
 }
 
 func SetDebug(debug bool) func(*Manager) error {

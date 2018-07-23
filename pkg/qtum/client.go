@@ -127,7 +127,7 @@ func (c *Client) GetTransactionReceipt(txHash string) (*TransactionReceipt, erro
 
 	return receipt, nil
 }
-func (c *Client) DecodeRawTransaction(hex string) (*Transaction, error) {
+func (c *Client) DecodeRawTransaction(hex string) (*DecodedRawTransaction, error) {
 	r := c.NewRPCRequest(MethodDecoderawtransaction)
 	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, hex))
 
@@ -136,7 +136,7 @@ func (c *Client) DecodeRawTransaction(hex string) (*Transaction, error) {
 		return nil, err
 	}
 
-	var tx *Transaction
+	var tx *DecodedRawTransaction
 	if err = json.Unmarshal(result.RawResult, &tx); err != nil {
 		return nil, err
 	}
