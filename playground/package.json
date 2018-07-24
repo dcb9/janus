@@ -4,6 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "minimist": "^1.2.0",
+    "ora": "^3.0.0",
     "qtumjs": "^1.9.1"
   }
 }
