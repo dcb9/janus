@@ -75,13 +75,17 @@ func errorHandler(err error, c echo.Context) {
 			}
 			return
 		}
+
+		if err := cc.JSONRPCError(&rpc.JSONRPCError{
+			Code:    rpc.ErrInvalid,
+			Message: err.Error(),
+		}); err != nil {
+			level.Error(cc.logger).Log("msg", "reply to client error", "err", err)
+		}
+		return
 	}
 
-	if ok {
-		level.Error(cc.logger).Log("errorHandler", err)
-	} else {
-		log.Println("errorHandler", err.Error())
-	}
+	log.Println("errorHandler", err.Error())
 
 	c.Echo().DefaultHTTPErrorHandler(err, c)
 }

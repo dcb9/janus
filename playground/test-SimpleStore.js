@@ -18,7 +18,6 @@ async function test() {
   console.log("call", await simpleStoreContract.call("get", [], opts))
   console.log()
 
-
   const newVal = Math.floor((Math.random() * 100000000) + 1);
   console.log(`exec: await simpleStoreContract.send("set", [${newVal}], {gasPrice: 100})`)
   const tx = await simpleStoreContract.send("set", [newVal], opts)

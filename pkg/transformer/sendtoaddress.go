@@ -8,20 +8,20 @@ import (
 	"github.com/dcb9/janus/pkg/rpc"
 )
 
-func (m *Manager) sendtoaddress(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) error {
+func (m *Manager) sendtoaddress(req *rpc.JSONRPCRequest, tx *eth.TransactionReq) (ResponseTransformerFunc, error) {
 	req.Method = qtum.MethodSendtoaddress
 
 	from, err := m.getQtumWalletAddress(tx.From)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	to, err := m.getQtumWalletAddress(tx.To)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	amount, err := EthValueToQtumAmount(tx.Value)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	params := []interface{}{
@@ -39,10 +39,19 @@ func (m *Manager) sendtoaddress(req *rpc.JSONRPCRequest, tx *eth.TransactionReq)
 
 	req.Params, err = json.Marshal(params)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return m.SendtoaddressResp, nil
+}
+func (m *Manager) SendtoaddressResp(result json.RawMessage) (interface{}, error) {
+	var txid string
+	err := json.Unmarshal(result, &txid)
+	if err != nil {
+		return nil, err
+	}
+
+	return AddHexPrefix(txid), nil
 }
 
 //  $ qcli help sendtoaddress

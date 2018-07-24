@@ -70,7 +70,7 @@ func (m *Manager) SendTransaction(req *rpc.JSONRPCRequest) (ResponseTransformerF
 	if t.IsCreateContract() {
 		err = m.createcontract(req, t)
 	} else if t.IsSendEther() {
-		err = m.sendtoaddress(req, t)
+		return m.sendtoaddress(req, t)
 	} else if t.IsCallContract() {
 		err = m.sendtocontract(req, t)
 	} else {

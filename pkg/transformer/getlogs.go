@@ -16,43 +16,44 @@ func (m *Manager) GetLogs(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, err
 	if err := unmarshalRequest(req.Params, &params); err != nil {
 		return nil, err
 	}
-	if len(params) == 0 {
-		return nil, errors.New("params must be set")
-	}
 
 	var filter eth.GetLogsFilter
-	if err := unmarshalRequest(params[0], &filter); err != nil {
-		return nil, err
+	if len(params) > 0 {
+		if err := unmarshalRequest(params[0], &filter); err != nil {
+			return nil, err
+		}
 	}
 
 	if len(filter.Topics) != 0 {
 		return nil, errors.New("topics is not supported yet")
 	}
 
-	from, err := m.getQtumBlockNumber(filter.FromBlock)
+	from, err := m.getQtumBlockNumber(filter.FromBlock, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := m.getQtumBlockNumber(filter.ToBlock)
+	to, err := m.getQtumBlockNumber(filter.ToBlock, -1)
 	if err != nil {
 		return nil, err
 	}
 
 	var addresses []string
-	if filter.Address[0] == '"' {
-		var addr string
-		if err = json.Unmarshal(filter.Address, &addr); err != nil {
-			return nil, err
+	if filter.Address != nil {
+		if filter.Address[0] == '"' {
+			var addr string
+			if err = json.Unmarshal(filter.Address, &addr); err != nil {
+				return nil, err
+			}
+			addresses = append(addresses, addr)
+		} else {
+			if err = json.Unmarshal(filter.Address, &addresses); err != nil {
+				return nil, err
+			}
 		}
-		addresses = append(addresses, addr)
-	} else {
-		if err = json.Unmarshal(filter.Address, &addresses); err != nil {
-			return nil, err
+		for i, _ := range addresses {
+			addresses[i] = RemoveHexPrefix(addresses[i])
 		}
-	}
-	for i, _ := range addresses {
-		addresses[i] = RemoveHexPrefix(addresses[i])
 	}
 
 	newParams, err := json.Marshal([]interface{}{
@@ -83,7 +84,11 @@ func (m *Manager) GetLogsResp(result json.RawMessage) (interface{}, error) {
 	return logs, nil
 }
 
-func (m *Manager) getQtumBlockNumber(ethBlock json.RawMessage) (*big.Int, error) {
+func (m *Manager) getQtumBlockNumber(ethBlock json.RawMessage, defaultVal int64) (*big.Int, error) {
+	if ethBlock == nil {
+		return big.NewInt(defaultVal), nil
+	}
+
 	if isString(ethBlock) {
 		var ethBlockStr string
 		if err := json.Unmarshal(ethBlock, &ethBlockStr); err != nil {
