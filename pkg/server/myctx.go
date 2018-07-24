@@ -7,6 +7,7 @@ import (
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 )
@@ -27,7 +28,14 @@ func (c *myCtx) JSONRPCResult(result interface{}) error {
 }
 
 func (c *myCtx) JSONRPCError(err *rpc.JSONRPCError) error {
-	return c.Context.JSON(http.StatusInternalServerError, eth.NewJSONRPCResult(c.rpcReq.ID, nil, err))
+	resp := eth.NewJSONRPCResult(c.rpcReq.ID, nil, err)
+	respBytes, marshalErr := json.Marshal(resp)
+	if marshalErr != nil {
+		return marshalErr
+	}
+
+	level.Error(c.logger).Log("component", "myCtx#JSONRPCError", "resp", respBytes)
+	return c.Context.JSON(http.StatusInternalServerError, resp)
 }
 
 func (s *Server) myCtxHandler(h func(*myCtx) (result interface{}, err error)) echo.HandlerFunc {
@@ -37,14 +45,9 @@ func (s *Server) myCtxHandler(h func(*myCtx) (result interface{}, err error)) ec
 			return err
 		}
 
-		c = &myCtx{
-			Context: c,
-			rpcReq:  &rpcReq,
-			logger:  s.logger,
-			server:  s,
-		}
+		cc := c.(*myCtx)
+		cc.rpcReq = &rpcReq
 
-		cc, _ := c.(*myCtx)
 		result, err := h(cc)
 		if err != nil {
 			return err

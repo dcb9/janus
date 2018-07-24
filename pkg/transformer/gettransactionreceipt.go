@@ -66,23 +66,7 @@ func (m *Manager) GettransactionreceiptResp(result json.RawMessage) (interface{}
 		status = "0x1"
 	}
 
-	logs := make([]eth.Log, 0, len(receipt.Log))
-	for index, log := range receipt.Log {
-		topics := make([]string, 0, len(log.Topics))
-		for _, topic := range log.Topics {
-			topics = append(topics, AddHexPrefix(topic))
-		}
-		logs = append(logs, eth.Log{
-			TransactionHash:  AddHexPrefix(receipt.TransactionHash),
-			TransactionIndex: hexutil.EncodeUint64(receipt.TransactionIndex),
-			BlockHash:        AddHexPrefix(receipt.BlockHash),
-			BlockNumber:      hexutil.EncodeUint64(receipt.BlockNumber),
-			Data:             AddHexPrefix(log.Data),
-			Address:          AddHexPrefix(log.Address),
-			Topics:           topics,
-			LogIndex:         hexutil.EncodeUint64(uint64(index)),
-		})
-	}
+	logs := getEthLogs(receipt)
 
 	ethTxReceipt := eth.TransactionReceipt{
 		TransactionHash:   AddHexPrefix(receipt.TransactionHash),

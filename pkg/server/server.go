@@ -58,6 +58,17 @@ func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 
 func (s *Server) Start() error {
 	e := s.echo
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			cc := &myCtx{
+				Context: c,
+				server:  s,
+				logger:  s.logger,
+			}
+			c.Set("myctx", cc)
+			return h(cc)
+		}
+	})
 
 	e.HideBanner = true
 	e.POST("/*", s.myCtxHandler(httpHandler))

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/dcb9/janus/pkg/transformer"
@@ -53,9 +54,9 @@ func httpHandler(c *myCtx) (interface{}, error) {
 }
 
 func errorHandler(err error, c echo.Context) {
-	cc, ok := c.(*myCtx)
-	if ok && err != nil {
-		level.Error(cc.logger).Log("err", err)
+	myctx := c.Get("myctx")
+	cc, ok := myctx.(*myCtx)
+	if ok {
 		err := errors.Cause(err)
 		if err == transformer.UnmarshalRequestErr {
 			if err := cc.JSONRPCError(&rpc.JSONRPCError{
@@ -74,6 +75,12 @@ func errorHandler(err error, c echo.Context) {
 			}
 			return
 		}
+	}
+
+	if ok {
+		level.Error(cc.logger).Log("errorHandler", err)
+	} else {
+		log.Println("errorHandler", err.Error())
 	}
 
 	c.Echo().DefaultHTTPErrorHandler(err, c)

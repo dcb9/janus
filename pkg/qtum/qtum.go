@@ -23,6 +23,8 @@ const (
 	MethodDecoderawtransaction  = "decoderawtransaction"
 	MethodGetblockcount         = "getblockcount"
 	MethodGetblockchaininfo     = "getblockchaininfo"
+	MethodSearchlogs            = "searchlogs"
+	MethodWaitforlogs           = "waitforlogs"
 )
 
 type (

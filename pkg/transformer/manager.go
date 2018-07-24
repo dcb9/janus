@@ -36,6 +36,7 @@ func NewManager(qtumClient *qtum.Client, opts ...func(*Manager) error) (*Manager
 		"eth_getTransactionReceipt": m.GetTransactionReceipt,
 		"eth_blockNumber":           m.BlockNumber,
 		"net_version":               m.NetVersion,
+		"eth_getLogs":               m.GetLogs,
 	}
 
 	for _, opt := range opts {

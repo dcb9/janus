@@ -300,6 +300,9 @@ $ curl --header 'Content-Type: application/json' --data \
 - eth_blockNumber
 - net_version
   - returns string // current network name as defined in BIP70 (main, test, regtest)
+- eth_getLogs
+  - topics is not supported yet
+  - tags, "pending" and "earliest", are unsupported
 
 ## Todo list
 
