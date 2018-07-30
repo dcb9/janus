@@ -20,6 +20,8 @@ type Server struct {
 	echo               *echo.Echo
 }
 
+// FIXME: define a StartServer/main function to do dependency injection. Constructor should be simple.
+
 func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 	opts = append(opts, setQtumRPC(qtumRPC), setAddress(addr))
 
@@ -34,6 +36,8 @@ func New(qtumRPC string, addr string, opts ...Option) (*Server, error) {
 			return nil, err
 		}
 	}
+
+	// FIXME: dependency injection: pass client an transformer into constructor as parameters
 
 	p.qtumClient, err = qtum.NewClient(
 		qtumRPC,

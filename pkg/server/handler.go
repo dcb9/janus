@@ -11,13 +11,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+// FIXME: refactor this method. move the `request -> transform -> response` to transformer package
 func httpHandler(c *myCtx) (interface{}, error) {
 	rpcReq := c.rpcReq
 
+	// FIXME: move to transformer
 	switch rpcReq.Method {
 	case "personal_unlockAccount":
 		return true, nil
 	}
+
+	// FIXME:
+	// proxyRes, err = TransformRequest.Proxy(rpcReq)
+	// output proxyRes as JSON. done.
 
 	level.Info(c.logger).Log("msg", "before transform request", "method", rpcReq.Method, "params", []byte(rpcReq.Params))
 	responseTransformer, err := c.server.transformerManager.TransformRequest(rpcReq)

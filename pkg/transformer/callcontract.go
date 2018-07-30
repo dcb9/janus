@@ -10,6 +10,63 @@ import (
 	"github.com/dcb9/janus/pkg/rpc"
 )
 
+// method: eth_call
+//
+// eth request -> qtum request
+// call qtum rpc
+// qtum reponse -> eth response
+
+func (m *Manager) proxyRPC(req *rpc.JSONRPCRequest) (interface{}, error) {
+	switch req.Method {
+	case "eth_call":
+		var req eth.CallRequest
+		err := unmarshalRequest(req.Params, &req)
+		if err != nil {
+			return nil, err
+		}
+		return m.proxyETHCall(req)
+	default:
+		return errors.New("unsupported method")
+	}
+}
+
+type Proxy interface {
+	request(ethreq interface{}) (interface{}, error)
+}
+
+// FIXME: rename file to eth_call.go
+// proxy eth_call
+
+type ProxyETHCall struct{}
+
+func (p *ProxyETHCall) request(rawreq *rpc.JSONRPCRequest) (interface{}, error) {
+	var req eth.CallRequest
+	err := unmarshalRequest(rawreq.Params, &req)
+	if err != nil {
+		return nil, err
+	}
+	return p.proxyInternal(req)
+}
+
+func (p *ProxyETHCall) requestInternal(ethreq *eth.CallRequest) (*eth.CallResponse, error) {
+	// eth req -> qtum req
+	qtumreq, err = p.ToRequest(ethreq)
+
+	var qtumres qtum.CallContract
+	err = p.rpc.Request(qtumreq, &qtumres)
+
+	// qtum res -> eth res
+	ethres, err = p.ToResponse(ethreq)
+
+	return ethres, err
+}
+
+func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContract, error) {
+}
+
+func (p *ProxyETHCall) ToResponse(res *qtum.CallResponse) (*eth.CallResponse, error) {
+}
+
 func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error) {
 	var params []json.RawMessage
 	if err := unmarshalRequest(req.Params, &params); err != nil {
@@ -19,36 +76,11 @@ func (m *Manager) Call(req *rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
 		return nil, errors.New("params must be set")
 	}
 
+	// FIXME: rename to eth.CallRequest
 	var tx eth.TransactionCallReq
 	if err := unmarshalRequest(params[0], &tx); err != nil {
 		return nil, err
 	}
-	gasLimit, _, err := EthGasToQtum(&tx)
-	if err != nil {
-		return nil, err
-	}
-
-	from := tx.From
-
-	if IsEthHexAddress(from) {
-		from, err = m.qtumClient.FromHexAddress(RemoveHexPrefix(from))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	newParams, err := json.Marshal([]interface{}{
-		RemoveHexPrefix(tx.To),
-		RemoveHexPrefix(tx.Data),
-		from,
-		gasLimit,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	req.Params = newParams
-	req.Method = qtum.MethodCallcontract
 
 	//Qtum RPC
 	// callcontract "address" "data" ( address )

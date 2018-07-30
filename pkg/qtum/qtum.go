@@ -1,10 +1,11 @@
 package qtum
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -12,6 +13,7 @@ const (
 )
 
 const (
+	// FIXME: camel case. MethodGethexaddress -> MethodGetHexAddress
 	MethodGethexaddress         = "gethexaddress"
 	MethodFromhexaddress        = "fromhexaddress"
 	MethodSendtocontract        = "sendtocontract"
@@ -27,7 +29,16 @@ const (
 	MethodWaitforlogs           = "waitforlogs"
 )
 
+// FIXME: rename TransactionReceipt -> GetTransactionReceiptResponse
+// FIXME: rename all other qtum RPC types
+// FIXME: move all RPC types into its own file.
+// FIXME: (optional) add RPC examples to each struct
 type (
+	/* example:
+	{
+		"blockhash": "afafafa..."
+	}
+	*/
 	TransactionReceipt struct {
 		BlockHash         string `json:"blockHash"`
 		BlockNumber       uint64 `json:"blockNumber"`
@@ -108,6 +119,9 @@ type (
 		Hex               string               `json:"hex"`
 	}
 
+	// FIXME: extract asm to its own file. btcasm.go
+
+	// ASM is Bitcoin Script extended by qtum to support smart contracts
 	ASM struct {
 		VMVersion  string
 		GasLimit   string
@@ -116,12 +130,13 @@ type (
 	}
 	CallASM struct {
 		ASM
+		// FIXME: EncodedABI -> CallData
 		EncodedABI      string
 		ContractAddress string
 	}
-
 	CreateASM struct {
 		ASM
+		// FIXME: EncodedABI -> CallData
 		EncodedABI string
 	}
 
@@ -162,6 +177,7 @@ type (
 func ParseCallASM(asm string) (*CallASM, error) {
 	parts := strings.Split(asm, " ")
 	if len(parts) < 6 {
+		// FIXME: typo: sam -> ASM
 		return nil, errors.New("invalid call sam")
 	}
 
@@ -180,6 +196,7 @@ func ParseCallASM(asm string) (*CallASM, error) {
 func ParseCreateASM(asm string) (*CreateASM, error) {
 	parts := strings.Split(asm, " ")
 	if len(parts) < 5 {
+		// FIXME: typo: sam -> ASM
 		return nil, errors.New("invalid create sam")
 	}
 
@@ -194,10 +211,12 @@ func ParseCreateASM(asm string) (*CreateASM, error) {
 	}, nil
 }
 
+// FIXME: rename GetGasPrice -> GasPrice
 func (asm *ASM) GetGasPrice() (*big.Int, error) {
 	return stringToBigInt(asm.GasPrice)
 }
 
+// FIXME: rename GetGasLimit -> GasLimit
 func (asm *ASM) GetGasLimit() (*big.Int, error) {
 	return stringToBigInt(asm.GasLimit)
 }
@@ -214,7 +233,8 @@ func stringToBigInt(str string) (*big.Int, error) {
 	var success bool
 	v := new(big.Int)
 	if v, success = v.SetString(str, 10); !success {
-		return nil, errors.New(fmt.Sprintf("failed to parse str: %s to big.Int", str))
+		// FIXME: use errors.Errorf
+		return nil, errors.New(fmt.Sprintf("Failed to parse big.Int: %s", str))
 	}
 	return v, nil
 }
