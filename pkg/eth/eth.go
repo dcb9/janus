@@ -44,10 +44,12 @@ func (t *TransactionReq) IsCallContract() bool {
 	return t.To != "" && t.Data != ""
 }
 
+// FIXME: GetGas -> GasHex
 func (t *TransactionReq) GetGas() string {
 	return t.Gas.Hex()
 }
 
+// FIXME: GetGasPrice -> GasPriceHex
 func (t *TransactionReq) GetGasPrice() string {
 	return t.GasPrice.Hex()
 }
@@ -123,6 +125,7 @@ type (
 	}
 )
 
+// FIXME: ETHInt
 type EthInt big.Int
 
 func (i *EthInt) Hex() string {
@@ -139,6 +142,11 @@ func (i *EthInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(i.ToBigInt())
 }
 
+// FIXME: extract parsers into constructors:
+// ETHIntFromNumber
+// ETHIntFromIntger
+
+// UnmarshalJSON needs to be able to parse ETHInt from both hex string or number
 func (i *EthInt) UnmarshalJSON(data []byte) (err error) {
 	if len(data) == 0 {
 		return errors.New("data must not be empty")

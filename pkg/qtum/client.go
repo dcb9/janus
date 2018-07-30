@@ -19,6 +19,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// FIXME: Abstract all API calls into a RPC call helper. See:
+// https://github.com/hayeah/eostools/blob/8e1d0d48c74b7ca6a74b132d619a4e7f8673d26a/eos-actions/main.go#L16
+
+// FIXME: We can probably remove all methods from Client, and only provide a single `Request` method
+
+// FIXME: Define all RPC types in rpcTypes.go
+
+// FIXME: rename Client -> RPC or RPCClient
 type Client struct {
 	rpcURL  string
 	doer    doer
@@ -68,6 +76,7 @@ func SetLogger(l log.Logger) func(*Client) error {
 	}
 }
 
+// FIXME: GetHexAddress -> Base58AddressToHex
 func (c *Client) GetHexAddress(addr string) (string, error) {
 	r := c.NewRPCRequest(MethodGethexaddress)
 	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, addr))
@@ -102,6 +111,12 @@ func (c *Client) FromHexAddress(addr string) (string, error) {
 	return qtumAddr, nil
 }
 
+// FIXME: Define the types for all API methods: [methodName]Request, [methodName]Response
+//
+// type GetTransactionReceiptResponse []struct {
+// 	// A int `json:"a"`
+// }
+
 func (c *Client) GetTransactionReceipt(txHash string) (*TransactionReceipt, error) {
 	r := c.NewRPCRequest(MethodGettransactionreceipt)
 	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, txHash))
@@ -127,6 +142,7 @@ func (c *Client) GetTransactionReceipt(txHash string) (*TransactionReceipt, erro
 
 	return receipt, nil
 }
+
 func (c *Client) DecodeRawTransaction(hex string) (*DecodedRawTransaction, error) {
 	r := c.NewRPCRequest(MethodDecoderawtransaction)
 	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, hex))
