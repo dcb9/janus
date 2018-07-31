@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/server"
+	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
@@ -28,15 +30,20 @@ func action(pc *kingpin.ParseContext) error {
 		logger = level.NewFilter(logger, level.AllowWarn())
 	}
 
-	s, err := server.New(
-		*qtumRPC,
-		addr,
-		server.SetLogger(logger),
-		server.SetDebug(*devMode),
-	)
-
+	qtumJSONRPC, err := qtum.NewClient(*qtumRPC, qtum.SetDebug(*devMode), qtum.SetLogger(logger))
 	if err != nil {
-		return errors.Wrap(err, "new proxy")
+		return errors.Wrap(err, "jsonrpc#New")
+	}
+	qtumClient := qtum.New(qtumJSONRPC)
+
+	t, err := transformer.New(qtumClient, transformer.DefaultProxies(qtumClient), transformer.SetDebug(*devMode), transformer.SetLogger(logger))
+	if err != nil {
+		return errors.Wrap(err, "transformer#New")
+	}
+
+	s, err := server.New(qtumClient, t, addr, server.SetLogger(logger), server.SetDebug(*devMode))
+	if err != nil {
+		return errors.Wrap(err, "server#New")
 	}
 
 	return s.Start()
