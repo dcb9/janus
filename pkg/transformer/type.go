@@ -1,17 +1,16 @@
 package transformer
 
 import (
-	"encoding/json"
+	"errors"
 
-	"github.com/dcb9/janus/pkg/rpc"
-	"github.com/pkg/errors"
+	"github.com/dcb9/janus/pkg/eth"
 )
 
-type (
-	RequestTransformerFunc  func(*rpc.JSONRPCRequest) (ResponseTransformerFunc, error)
-	ResponseTransformerFunc func(result json.RawMessage) (newResult interface{}, err error)
-)
+var UnmarshalRequestErr = errors.New("Input is invalid")
 
-var (
-	UnmarshalRequestErr = errors.New("unmarshal request error")
-)
+type Option func(*Transformer) error
+
+type ETHProxy interface {
+	Request(*eth.JSONRPCRequest) (interface{}, error)
+	Method() string
+}

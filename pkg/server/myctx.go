@@ -5,53 +5,42 @@ import (
 	"net/http"
 
 	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/rpc"
+	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 )
 
 type myCtx struct {
 	echo.Context
-	rpcReq *rpc.JSONRPCRequest
-	logger log.Logger
-	server *Server
+	rpcReq      *eth.JSONRPCRequest
+	logger      log.Logger
+	transformer *transformer.Transformer
 }
 
 func (c *myCtx) JSONRPCResult(result interface{}) error {
-	bytes, err := json.Marshal(result)
+	response, err := eth.NewJSONRPCResult(c.rpcReq.ID, result)
 	if err != nil {
-		return errors.Wrap(err, "myCtx#JSONRPCResult")
-	}
-	return c.Context.JSON(http.StatusOK, eth.NewJSONRPCResult(c.rpcReq.ID, bytes, nil))
-}
-
-func (c *myCtx) JSONRPCError(err *rpc.JSONRPCError) error {
-	resp := eth.NewJSONRPCResult(c.rpcReq.ID, nil, err)
-	respBytes, marshalErr := json.Marshal(resp)
-	if marshalErr != nil {
-		return marshalErr
+		return err
 	}
 
-	level.Error(c.logger).Log("component", "myCtx#JSONRPCError", "resp", respBytes)
-	return c.Context.JSON(http.StatusInternalServerError, resp)
+	return c.JSON(http.StatusOK, response)
 }
 
-func (s *Server) myCtxHandler(h func(*myCtx) (result interface{}, err error)) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var rpcReq rpc.JSONRPCRequest
-		if err := c.Bind(&rpcReq); err != nil {
-			return err
-		}
+func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) {
+	var id json.RawMessage
+	if c.rpcReq != nil && c.rpcReq.ID != nil {
+		id = c.rpcReq.ID
+	}
+	resp := &eth.JSONRPCResult{
+		ID:      id,
+		Error:   err,
+		JSONRPC: eth.RPCVersion,
+	}
 
-		cc := c.(*myCtx)
-		cc.rpcReq = &rpcReq
-
-		result, err := h(cc)
-		if err != nil {
-			return err
+	if !c.Response().Committed {
+		if err := c.JSON(http.StatusInternalServerError, resp); err != nil {
+			level.Error(c.logger).Log("replyToClientErr", err.Error())
 		}
-		return cc.JSONRPCResult(result)
 	}
 }

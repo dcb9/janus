@@ -4,29 +4,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/dcb9/janus/pkg/utils"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 )
 
 type EthGas interface {
-	GetGas() string
-	GetGasPrice() string
+	GasHex() string
+	GasPriceHex() string
 }
 
 func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	gasLimit = big.NewInt(2500000)
-	if gas := g.GetGas(); gas != "" {
-		gasLimit, err = hexutil.DecodeBig(AddHexPrefix(gas))
+	if gas := g.GasHex(); gas != "" {
+		gasLimit, err = utils.DecodeBig(gas)
 		if err != nil {
 			err = errors.Wrap(err, "decode gas")
 			return
 		}
 	}
 
-	gasPriceFloat64, err := EthValueToQtumAmount(g.GetGasPrice())
+	gasPriceFloat64, err := EthValueToQtumAmount(g.GasPriceHex())
 	if err != nil {
 		return nil, "0.0", err
 	}
@@ -36,7 +35,7 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 }
 
 func EthValueToQtumAmount(val string) (float64, error) {
-	ethVal, err := hexutil.DecodeBig(AddHexPrefix(val))
+	ethVal, err := utils.DecodeBig(val)
 	if err != nil {
 		return 0.0, err
 	}
@@ -64,24 +63,6 @@ func QtumAmountToEthValue(amount float64) (string, error) {
 	}
 
 	return hexutil.EncodeBig(result), nil
-}
-
-func RemoveHexPrefix(hex string) string {
-	if strings.HasPrefix(hex, "0x") {
-		return hex[2:]
-	}
-	return hex
-}
-
-func IsEthHexAddress(str string) bool {
-	return strings.HasPrefix(str, "0x") || common.IsHexAddress("0x"+str)
-}
-
-func AddHexPrefix(hex string) string {
-	if strings.HasPrefix(hex, "0x") {
-		return hex
-	}
-	return "0x" + hex
 }
 
 func unmarshalRequest(data []byte, v interface{}) error {

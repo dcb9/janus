@@ -1,52 +1,144 @@
 package qtum
 
 import (
-	"encoding/json"
-	"fmt"
-	"math/big"
-	"net/http"
-	"sync"
-
 	"bytes"
-
+	"encoding/json"
 	"io"
 	"io/ioutil"
+	"math/big"
+	"net/http"
+	"net/url"
+	"sync"
 
-	"github.com/bitly/go-simplejson"
-	"github.com/dcb9/janus/pkg/rpc"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 )
 
 type Client struct {
-	rpcURL  string
-	doer    doer
-	logger  log.Logger
-	debug   bool
+	URL  string
+	doer doer
+
+	logger log.Logger
+	debug  bool
+
 	id      *big.Int
+	idStep  *big.Int
 	idMutex sync.Mutex
+}
+
+func NewClient(rpcURL string, opts ...func(*Client) error) (*Client, error) {
+	err := checkRPCURL(rpcURL)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		doer:   http.DefaultClient,
+		URL:    rpcURL,
+		logger: log.NewNopLogger(),
+		debug:  false,
+		id:     big.NewInt(0),
+		idStep: big.NewInt(1),
+	}
+
+	for _, opt := range opts {
+		if err := opt(c); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
+}
+
+func (c *Client) Request(method string, params interface{}, result interface{}) error {
+	r, err := c.NewRPCRequest(method, params)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.Do(r)
+	if err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(resp.RawResult, result); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	l := log.With(level.Debug(c.logger), "method", req.Method)
+	if c.debug {
+		l.Log("reqBody", reqBody)
+	}
+
+	respBody, err := c.do(bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, errors.Wrap(err, "Client#do")
+	}
+
+	if c.debug {
+		l.Log("respBody", respBody)
+	}
+
+	res, err := responseBodyToResult(respBody)
+	if err != nil {
+		return nil, errors.Wrap(err, "responseBodyToResult")
+	}
+
+	return res, nil
+}
+
+func (c *Client) NewRPCRequest(method string, params interface{}) (*JSONRPCRequest, error) {
+	paramsJSON, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	c.idMutex.Lock()
+	c.id = c.id.Add(c.id, c.idStep)
+	c.idMutex.Unlock()
+
+	return &JSONRPCRequest{
+		JSONRPC: RPCVersion,
+		ID:      json.RawMessage(`"` + c.id.String() + `"`),
+		Method:  method,
+		Params:  paramsJSON,
+	}, nil
+}
+
+func (c *Client) do(body io.Reader) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodPost, c.URL, body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.doer.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if resp != nil {
+			io.Copy(ioutil.Discard, resp.Body)
+			resp.Body.Close()
+		}
+	}()
+
+	return ioutil.ReadAll(resp.Body)
 }
 
 type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-func NewClient(rpcURL string, opts ...func(*Client) error) (*Client, error) {
-	c := &Client{
-		doer:   http.DefaultClient,
-		rpcURL: rpcURL,
-		logger: log.NewNopLogger(),
-		debug:  false,
-		id:     big.NewInt(0),
-	}
-	for _, opt := range opts {
-		if err := opt(c); err != nil {
-			return nil, err
-		}
-	}
-	return c, nil
-}
 func SetDoer(d doer) func(*Client) error {
 	return func(c *Client) error {
 		c.doer = d
@@ -68,135 +160,8 @@ func SetLogger(l log.Logger) func(*Client) error {
 	}
 }
 
-func (c *Client) GetHexAddress(addr string) (string, error) {
-	r := c.NewRPCRequest(MethodGethexaddress)
-	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, addr))
-
-	res, err := c.Request(r)
-	if err != nil {
-		return "", err
-	}
-
-	var hexAddr string
-	if err = json.Unmarshal(res.RawResult, &hexAddr); err != nil {
-		return "", err
-	}
-
-	return hexAddr, nil
-}
-
-func (c *Client) FromHexAddress(addr string) (string, error) {
-	level.Debug(c.logger).Log("fromHexAddress", addr)
-	r := c.NewRPCRequest(MethodFromhexaddress)
-	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, addr))
-	res, err := c.Request(r)
-	if err != nil {
-		return "", err
-	}
-
-	var qtumAddr string
-	if err = json.Unmarshal(res.RawResult, &qtumAddr); err != nil {
-		return "", err
-	}
-
-	return qtumAddr, nil
-}
-
-func (c *Client) GetTransactionReceipt(txHash string) (*TransactionReceipt, error) {
-	r := c.NewRPCRequest(MethodGettransactionreceipt)
-	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, txHash))
-
-	result, err := c.Request(r)
-	if err != nil {
-		return nil, err
-	}
-
-	js, err := simplejson.NewJson(result.RawResult)
-	if err != nil {
-		return nil, err
-	}
-	receiptJSON, err := js.GetIndex(0).Encode()
-	if err != nil {
-		return nil, err
-	}
-	var receipt *TransactionReceipt
-	err = json.Unmarshal(receiptJSON, &receipt)
-	if err != nil {
-		return nil, err
-	}
-
-	return receipt, nil
-}
-func (c *Client) DecodeRawTransaction(hex string) (*DecodedRawTransaction, error) {
-	r := c.NewRPCRequest(MethodDecoderawtransaction)
-	r.Params = json.RawMessage(fmt.Sprintf(`["%s"]`, hex))
-
-	result, err := c.Request(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var tx *DecodedRawTransaction
-	if err = json.Unmarshal(result.RawResult, &tx); err != nil {
-		return nil, err
-	}
-
-	return tx, nil
-}
-
-func (c *Client) Request(reqBody *rpc.JSONRPCRequest) (*rpc.SuccessJSONRPCResult, error) {
-	body, err := json.Marshal(reqBody)
-	if err != nil {
-		return nil, err
-	}
-
-	respBody, err := c.do(bytes.NewReader(body))
-	if err != nil {
-		return nil, errors.Wrap(err, "Client#do")
-	}
-	res, err := responseBodyToResult(respBody)
-	if err != nil {
-		return nil, errors.Wrap(err, "responseBodyToResult")
-	}
-
-	return res, nil
-}
-
-func (c *Client) do(body io.Reader) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodPost, c.rpcURL, body)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.doer.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if resp != nil {
-			io.Copy(ioutil.Discard, resp.Body)
-			resp.Body.Close()
-		}
-	}()
-
-	return ioutil.ReadAll(resp.Body)
-}
-
-var step = big.NewInt(1)
-
-func (c *Client) NewRPCRequest(method string) *rpc.JSONRPCRequest {
-	c.idMutex.Lock()
-	c.id = c.id.Add(c.id, step)
-	c.idMutex.Unlock()
-	return &rpc.JSONRPCRequest{
-		JSONRPC: Version,
-		ID:      json.RawMessage(`"` + c.id.String() + `"`),
-		Method:  method,
-	}
-}
-
-func responseBodyToResult(body []byte) (*rpc.SuccessJSONRPCResult, error) {
-	var res *rpc.JSONRPCResult
+func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
+	var res *JSONRPCResult
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
@@ -205,9 +170,26 @@ func responseBodyToResult(body []byte) (*rpc.SuccessJSONRPCResult, error) {
 		return nil, res.Error
 	}
 
-	return &rpc.SuccessJSONRPCResult{
+	return &SuccessJSONRPCResult{
 		ID:        res.ID,
 		RawResult: res.RawResult,
 		JSONRPC:   res.JSONRPC,
 	}, nil
+}
+
+func checkRPCURL(u string) error {
+	if u == "" {
+		return errors.New("URL must be set")
+	}
+
+	qtumRPC, err := url.Parse(u)
+	if err != nil {
+		return errors.Errorf("QTUM_RPC URL: %s", u)
+	}
+
+	if qtumRPC.User == nil {
+		return errors.Errorf("QTUM_RPC URL (must specify user & password): %s", u)
+	}
+
+	return nil
 }
