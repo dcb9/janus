@@ -195,9 +195,10 @@ func (r *SendToContractRequest) MarshalJSON() ([]byte, error) {
 
 type (
 	CreateContractRequest struct {
-		ByteCode string
-		GasLimit *big.Int
-		GasPrice string
+		ByteCode      string
+		GasLimit      *big.Int
+		GasPrice      string
+		SenderAddress string
 	}
 	/*
 	   {
@@ -228,6 +229,7 @@ func (r *CreateContractRequest) MarshalJSON() ([]byte, error) {
 		r.ByteCode,
 		r.GasLimit,
 		r.GasPrice,
+		r.SenderAddress,
 	})
 }
 
