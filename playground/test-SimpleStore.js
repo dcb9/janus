@@ -1,8 +1,11 @@
 // YOUR_QTUM_ACCOUNT
-const qtumAccount = "0x2352be3db3177f0a07efbe6da5857615b8c9901d"
+const url = require('url');
+
+const rpcURL=  process.env.ETH_RPC;
+const qtumAccount  = url.parse(rpcURL).auth.split(":")[0]
 
 const qtum = require("qtumjs")
-const rpc = new qtum.EthRPC(`http://${qtumAccount}:@localhost:23889`, qtumAccount)
+const rpc = new qtum.EthRPC(rpcURL, qtumAccount)
 const repoData = require("./solar.development.json")
 const {
   sender,

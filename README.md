@@ -295,8 +295,6 @@ $ sh deploy-SimpleStore.sh
   🚀  All contracts confirmed
      deployed ./contracts/SimpleStore.sol => 0x6997a4803d75964b8d093a939c227a16833d23ad
 
-$ vim test-SimpleStore.js # set your qtum account
-
 $ node test-SimpleStore.js
 exec: await simpleStoreContract.call("get", [], {gasPrice: 100})
 call { rawResult: '0x0000000000000000000000000000000000000000000000000000000000000001',
