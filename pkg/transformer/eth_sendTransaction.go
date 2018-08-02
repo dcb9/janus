@@ -124,6 +124,18 @@ func (p *ProxyETHSendTransaction) requestCreateContract(req *eth.SendTransaction
 		GasPrice: gasPrice,
 	}
 
+	if req.From != "" {
+		from := req.From
+		if utils.IsEthHexAddress(from) {
+			from, err = p.FromHexAddress(from)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		qtumreq.SenderAddress = from
+	}
+
 	var resp *qtum.CreateContractResponse
 	if err := p.Qtum.Request(qtum.MethodCreateContract, qtumreq, &resp); err != nil {
 		return nil, err

@@ -1,5 +1,5 @@
 // YOUR_QTUM_ACCOUNT
-const qtumAccount = "0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19"
+const qtumAccount = "0x2352be3db3177f0a07efbe6da5857615b8c9901d"
 
 const qtum = require("qtumjs")
 const rpc = new qtum.EthRPC(`http://${qtumAccount}:@localhost:23889`, qtumAccount)
