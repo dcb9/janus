@@ -48,10 +48,17 @@ func (t *SendTransactionRequest) IsCallContract() bool {
 }
 
 func (t *SendTransactionRequest) GasHex() string {
+	if t.Gas == nil {
+		return ""
+	}
+
 	return t.Gas.Hex()
 }
 
 func (t *SendTransactionRequest) GasPriceHex() string {
+	if t.GasPrice == nil {
+		return ""
+	}
 	return t.GasPrice.Hex()
 }
 
@@ -69,10 +76,16 @@ type CallRequest struct {
 }
 
 func (t *CallRequest) GasHex() string {
+	if t.Gas == nil {
+		return ""
+	}
 	return t.Gas.Hex()
 }
 
 func (t *CallRequest) GasPriceHex() string {
+	if t.GasPrice == nil {
+		return ""
+	}
 	return t.GasPrice.Hex()
 }
 
