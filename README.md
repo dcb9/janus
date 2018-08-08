@@ -13,7 +13,6 @@ Table of Contents
       * [logs](#logs)
       * [events](#events)
 * [Interact with QtumJS](#interact-with-qtumjs)
-* [ERC20 With QtumJS](#erc20-with-qtumjs-1)
 * [Try to interact with contract](#try-to-interact-with-contract)
    * [Assumption parameters](#assumption-parameters)
    * [createcontract method](#createcontract-method)
@@ -23,7 +22,6 @@ Table of Contents
    * [callcontract method](#callcontract-method)
    * [sendtoaddress method](#sendtoaddress-method)
 * [Support ETH methods](#support-eth-methods)
-* [Todo list](#todo-list)
 * [Known issues](#known-issues)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -67,15 +65,15 @@ $ export ETH_RPC=http://0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19:@localhost:23
 ### Deploy myToken
 ```
 $ sh deploy-myToken.sh
-  + solar deploy openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol --gasPrice=0.0000001 '[21000000]' --force
-  exec: solc [openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/dcb9/janus/playground]
+  + solar deploy contracts/MyToken.sol --gasPrice=0.0000001 '[21000000]' --force
+  exec: solc [contracts/MyToken.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/dcb9/janus/playground]
   cli gasPrice 0.0000001 1e-07
   gasPrice 1e-07 100
   gasPriceWei 100
-  txHash: 0xfe30795aafce57532af6215fe57ed3382f43fbeaf2b3c42c8ea4d9f34ab0be55
-  contractAddress: 0x90f3e8062c8537ee4825fd384caef0260795f8df
+  txHash: 0x7e4a1297bf5337b75f221351acb9e0540f128e45257588d86079c4ec962c4e51
+  contractAddress: 0x60833fd66342d3d031031e4cc1de57a4cd400dd9
   🚀  All contracts confirmed
-     deployed openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol => 0x90f3e8062c8537ee4825fd384caef0260795f8df
+     deployed contracts/MyToken.sol => 0x60833fd66342d3d031031e4cc1de57a4cd400dd9
 ```
 
 ### Methods
@@ -350,8 +348,6 @@ call { rawResult: '0x0000000000000000000000000000000000000000000000000000000004e
   logs: [] }
 
 ```
-
-## ERC20 With QtumJS
 
 ## Try to interact with contract
 

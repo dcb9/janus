@@ -1,0 +1,10 @@
+export ACC1="0x7926223070547d2d15b2ef5e7383e541c338ffe9"
+export ACC2="0x3a895d2af552600f1f585425318c13a5aa25f01a"
+
+node myToken.js mint ${ACC1} 100
+
+node myToken.js balance ${ACC1}
+
+node myToken.js transfer ${ACC1} ${ACC2} 1
+
+node myToken.js balance ${ACC2}
