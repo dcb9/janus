@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	stdLog "log"
 
 	"github.com/dcb9/janus/pkg/eth"
@@ -17,7 +18,8 @@ func httpHandler(c echo.Context) error {
 	}
 
 	var rpcReq *eth.JSONRPCRequest
-	if err := c.Bind(&rpcReq); err != nil {
+	decoder := json.NewDecoder(c.Request().Body)
+	if err := decoder.Decode(&rpcReq); err != nil {
 		return err
 	}
 
