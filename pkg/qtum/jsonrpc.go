@@ -23,6 +23,9 @@ const (
 	MethodGetBlockChainInfo     = "getblockchaininfo"
 	MethodSearchLogs            = "searchlogs"
 	MethodWaitForLogs           = "waitforlogs"
+	MethodGetBlockHash          = "getblockhash"
+	MethodGetAddressesByAccount = "getaddressesbyaccount"
+	MethodGetAccountInfo        = "getaccountinfo"
 )
 
 type JSONRPCRequest struct {

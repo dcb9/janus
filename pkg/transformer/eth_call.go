@@ -6,7 +6,7 @@ import (
 	"github.com/dcb9/janus/pkg/utils"
 )
 
-// ProxyEthCall implements ETHProxy
+// ProxyETHCall implements ETHProxy
 type ProxyETHCall struct {
 	*qtum.Qtum
 }

@@ -227,3 +227,86 @@ func (r *GetTransactionReceiptRequest) UnmarshalJSON(data []byte) error {
 	*r = GetTransactionReceiptRequest(params[0])
 	return nil
 }
+
+// ========== eth_accounts ============= //
+type AccountsResponse []string
+
+// ========== eth_getCode ============= //
+type (
+	GetCodeRequest struct {
+		Address     string
+		BlockNumber string
+	}
+	// the code from the given address.
+	GetCodeResponse string
+)
+
+func (r *GetCodeRequest) UnmarshalJSON(data []byte) error {
+	var params []string
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) == 0 {
+		return errors.New("params must be set")
+	}
+
+	r.Address = params[0]
+	if len(params) > 1 {
+		r.BlockNumber = params[1]
+	}
+
+	return nil
+}
+
+// ========== eth_newBlockFilter ============= //
+// a filter id
+type NewBlockFilterResponse string
+
+// ========== eth_uninstallFilter ============= //
+// the filter id
+type UninstallFilterRequest string
+
+// true if the filter was successfully uninstalled, otherwise false.
+type UninstallFilterResponse bool
+
+func (r *UninstallFilterRequest) UnmarshalJSON(data []byte) error {
+	var params []string
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) == 0 {
+		return errors.New("params must be set")
+	}
+
+	*r = UninstallFilterRequest(params[0])
+
+	return nil
+}
+
+// ========== eth_getFilterChanges ============= //
+// the filter id
+type GetFilterChangesRequest string
+
+//For filters created with eth_newBlockFilter the return are block hashes (DATA, 32 Bytes),
+// e.g. ["0x3454645634534..."].
+type GetFilterChangesResponse []string
+
+func (r *GetFilterChangesRequest) UnmarshalJSON(data []byte) error {
+	var params []string
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) == 0 {
+		return errors.New("params must be set")
+	}
+
+	*r = GetFilterChangesRequest(params[0])
+
+	return nil
+}

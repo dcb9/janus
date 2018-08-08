@@ -555,15 +555,20 @@ curl --header 'Content-Type: application/json' --data \
 - eth_getLogs
   - topics is not supported yet
   - tags, "pending" and "earliest", are unsupported
-
-## Todo list
+- eth_accounts
+- eth_getCode
+- eth_newBlockFilter
+- eth_getFilterChanges
+  - only support filters created with `eth_newBlockFilter`
+- eth_uninstallFilter
 
 ## Known issues
 
-- [ ] eth_getTransactionReceipt
-  - [ ] `logsBloom` is an empty string
-  - [ ] result will be an empty array if the txid of the transaction is a transfer operation
-- [ ] eth_getTransactionByHash
-  - [ ] `nonce` is an empty string
-  - [ ] `blockNumber`, `transactionIndex`, `from`, `to`, `value` will be empty, if the txid of the transaction is a transfer operation
-
+- eth_getTransactionReceipt
+  - `logsBloom` is an empty string
+  - result will be an empty array if the txid of the transaction is a transfer operation
+- eth_getTransactionByHash
+  - `nonce` is an empty string
+  - `blockNumber`, `transactionIndex`, `from`, `to`, `value` will be empty, if the txid of the transaction is a transfer operation
+- eth_accounts
+  - only return addresses which are linked to default account

@@ -74,6 +74,7 @@ func (t *Transformer) getProxy(rpcReq *eth.JSONRPCRequest) (ETHProxy, error) {
 }
 
 func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
+	blockFilter := new(BlockFilterSimulator)
 	return []ETHProxy{
 		&ProxyETHCall{Qtum: qtumRPCClient},
 		&ProxyETHPersonalUnlockAccount{},
@@ -83,6 +84,12 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHGetLogs{Qtum: qtumRPCClient},
 		&ProxyETHGetTransactionReceipt{Qtum: qtumRPCClient},
 		&ProxyETHSendTransaction{Qtum: qtumRPCClient},
+		&ProxyETHAccounts{Qtum: qtumRPCClient},
+		&ProxyETHGetCode{Qtum: qtumRPCClient},
+
+		&ProxyETHNewBlockFilter{Qtum: qtumRPCClient, blockFilter: blockFilter},
+		&ProxyETHGetFilterChanges{Qtum: qtumRPCClient, blockFilter: blockFilter},
+		&ProxyETHUninstallFilter{Qtum: qtumRPCClient, blockFilter: blockFilter},
 	}
 }
 

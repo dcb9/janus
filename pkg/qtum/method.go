@@ -1,6 +1,10 @@
 package qtum
 
-import "github.com/dcb9/janus/pkg/utils"
+import (
+	"math/big"
+
+	"github.com/dcb9/janus/pkg/utils"
+)
 
 type Method struct {
 	*Client
@@ -46,4 +50,17 @@ func (m *Method) DecodeRawTransaction(hex string) (*DecodedRawTransactionRespons
 	}
 
 	return resp, nil
+}
+
+func (m *Method) GetBlockCount() (resp *GetBlockCountResponse, err error) {
+	err = m.Request(MethodGetBlockCount, nil, &resp)
+	return
+}
+
+func (m *Method) GetBlockHash(b *big.Int) (resp GetBlockHashResponse, err error) {
+	req := GetBlockHashRequest{
+		Int: b,
+	}
+	err = m.Request(MethodGetBlockHash, &req, &resp)
+	return
 }
