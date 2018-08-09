@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"log"
 	"sync"
 
 	"github.com/dcb9/janus/pkg/eth"
@@ -27,6 +28,14 @@ func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
 	blockCount, err := p.GetBlockCount()
 	if err != nil {
 		return "", err
+	}
+
+	if p.Chain() == qtum.ChainRegTest {
+		defer func() {
+			if _, generateErr := p.Generate(1, nil); generateErr != nil {
+				log.Println("generate block err: ", generateErr)
+			}
+		}()
 	}
 
 	id := p.blockFilter.New(blockCount.Int.Uint64())

@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"log"
+
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/utils"
@@ -20,6 +22,14 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	var req eth.SendTransactionRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
+	}
+
+	if p.Chain() == qtum.ChainRegTest {
+		defer func() {
+			if _, generateErr := p.Generate(1, nil); generateErr != nil {
+				log.Println("generate block err: ", generateErr)
+			}
+		}()
 	}
 
 	if req.IsCreateContract() {

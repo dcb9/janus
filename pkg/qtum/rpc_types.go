@@ -698,3 +698,28 @@ func (r *GetBlockHashRequest) MarshalJSON() ([]byte, error) {
 		r.Uint64(),
 	})
 }
+
+// ========== Generate ============= //
+type (
+	GenerateRequest struct {
+		BlockNum int
+		MaxTries *int
+	}
+	GenerateResponse []string
+)
+
+func (r *GenerateRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. nblocks      (numeric, required) How many blocks are generated immediately.
+		2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).
+	*/
+	params := []interface{}{
+		r.BlockNum,
+	}
+
+	if r.MaxTries != nil {
+		params = append(params, r.MaxTries)
+	}
+
+	return json.Marshal(params)
+}

@@ -26,6 +26,7 @@ const (
 	MethodGetBlockHash          = "getblockhash"
 	MethodGetAddressesByAccount = "getaddressesbyaccount"
 	MethodGetAccountInfo        = "getaccountinfo"
+	MethodGenerate              = "generate"
 )
 
 type JSONRPCRequest struct {

@@ -64,3 +64,12 @@ func (m *Method) GetBlockHash(b *big.Int) (resp GetBlockHashResponse, err error)
 	err = m.Request(MethodGetBlockHash, &req, &resp)
 	return
 }
+
+func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
+	req := GenerateRequest{
+		BlockNum: blockNum,
+		MaxTries: maxTries,
+	}
+	err = m.Request(MethodGenerate, &req, &resp)
+	return
+}
