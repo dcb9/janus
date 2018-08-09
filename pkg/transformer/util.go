@@ -16,7 +16,7 @@ type EthGas interface {
 }
 
 func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
-	gasLimit = big.NewInt(2500000)
+	gasLimit = big.NewInt(40000000)
 	if gas := g.GasHex(); gas != "" {
 		gasLimit, err = utils.DecodeBig(gas)
 		if err != nil {
@@ -35,6 +35,10 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 }
 
 func EthValueToQtumAmount(val string) (float64, error) {
+	if val == "" {
+		return 0.0000004, nil
+	}
+
 	ethVal, err := utils.DecodeBig(val)
 	if err != nil {
 		return 0.0, err

@@ -13,7 +13,7 @@ const repoData = require("./solar.development.json")
 const {
   sender,
   ...info
-} = repoData.contracts['openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol']
+} = repoData.contracts['contracts/MyToken.sol']
 const myToken = new qtum.Contract(rpc, info)
 
 const opts = {gasPrice: 100}

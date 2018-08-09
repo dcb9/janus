@@ -95,7 +95,7 @@ type (
 			} `json:"reject"`
 			Version int64 `json:"version"`
 		} `json:"softforks"`
-		Verificationprogress int64 `json:"verificationprogress"`
+		Verificationprogress float64 `json:"verificationprogress"`
 	}
 )
 
@@ -491,17 +491,19 @@ func (r *GetTransactionReceiptResponse) UnmarshalJSON(data []byte) error {
 // ========== GetBlockCount ============= //
 
 type (
-	GetBlockCountResponse big.Int
+	GetBlockCountResponse struct {
+		*big.Int
+	}
 )
 
 func (r *GetBlockCountResponse) UnmarshalJSON(data []byte) error {
-	var i big.Int
+	var i *big.Int
 	err := json.Unmarshal(data, &i)
 	if err != nil {
 		return err
 	}
 
-	*r = GetBlockCountResponse(i)
+	r.Int = i
 	return nil
 }
 
@@ -617,4 +619,107 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 			"addresses": r.Addresses,
 		},
 	})
+}
+
+// ========== GetAccountInfo ============= //
+
+type (
+	// the account address
+	GetAccountInfoRequest string
+
+	/*
+		{
+			"address": "1adf95f5c60cdc0dfd99c3d2857cd01419be521c",
+			"balance": 0,
+			"storage": {
+				"8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b": {
+					"0000000000000000000000000000000000000000000000000000000000000004": "000000000000000000000000000000000000000000000000000000000000000a"
+				},
+				"c2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b": {
+					"0000000000000000000000000000000000000000000000000000000000000003": "0000000000000000000000007926223070547d2d15b2ef5e7383e541c338ffe9"
+				}
+			},
+			"code": "0x..."
+		}
+	*/
+	GetAccountInfoResponse struct {
+		Address string          `json:"address"`
+		Balance int             `json:"balance"`
+		Storage json.RawMessage `json:"storage"`
+		Code    string          `json:"code"`
+	}
+)
+
+func (r *GetAccountInfoRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. "address"          (string, required) The account address
+	*/
+	return json.Marshal([]interface{}{
+		string(*r),
+	})
+}
+
+// ========== GetAddressByAccount ============= //
+
+type (
+	// the account name
+	GetAddressesByAccountRequest string
+
+	/*
+		[
+			"qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW"
+		]
+	*/
+	GetAddressesByAccountResponse []string
+)
+
+func (r *GetAddressesByAccountRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. "account"        (string, required) The account name.
+	*/
+	return json.Marshal([]interface{}{
+		string(*r),
+	})
+}
+
+// ========== GetBlockHash ============= //
+type (
+	GetBlockHashRequest struct {
+		*big.Int
+	}
+	GetBlockHashResponse string
+)
+
+func (r *GetBlockHashRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. height         (numeric, required) The height index
+	*/
+	return json.Marshal([]interface{}{
+		r.Uint64(),
+	})
+}
+
+// ========== Generate ============= //
+type (
+	GenerateRequest struct {
+		BlockNum int
+		MaxTries *int
+	}
+	GenerateResponse []string
+)
+
+func (r *GenerateRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. nblocks      (numeric, required) How many blocks are generated immediately.
+		2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).
+	*/
+	params := []interface{}{
+		r.BlockNum,
+	}
+
+	if r.MaxTries != nil {
+		params = append(params, r.MaxTries)
+	}
+
+	return json.Marshal(params)
 }

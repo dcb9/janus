@@ -1,6 +1,12 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/transformer"
@@ -8,6 +14,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/pkg/errors"
 )
 
 type Server struct {
@@ -45,7 +52,6 @@ func New(
 
 func (s *Server) Start() error {
 	e := s.echo
-	e.HTTPErrorHandler = errorHandler
 	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, resp []byte) {
 		myctx := c.Get("myctx")
 		cc, ok := myctx.(*myCtx)
@@ -66,16 +72,14 @@ func (s *Server) Start() error {
 
 			c.Set("myctx", cc)
 
-			var rpcReq *eth.JSONRPCRequest
-			if err := c.Bind(&rpcReq); err != nil {
-				return err
-			}
-
-			cc.rpcReq = rpcReq
-
 			return h(c)
 		}
 	})
+
+	// support batch requests
+	e.Use(batchRequestsMiddleware)
+
+	e.HTTPErrorHandler = errorHandler
 	e.HideBanner = true
 	e.POST("/*", httpHandler)
 
@@ -97,4 +101,76 @@ func SetDebug(debug bool) Option {
 		p.debug = debug
 		return nil
 	}
+}
+
+func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		myctx := c.Get("myctx")
+		cc, ok := myctx.(*myCtx)
+		if !ok {
+			return errors.New("Could not find myctx")
+		}
+
+		// Request
+		reqBody := []byte{}
+		if c.Request().Body != nil { // Read
+			reqBody, _ = ioutil.ReadAll(c.Request().Body)
+		}
+		isBatchRequests := func(msg json.RawMessage) bool {
+			return msg[0] == '['
+		}
+		c.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqBody)) // Reset
+
+		if !isBatchRequests(reqBody) {
+			return h(c)
+		}
+
+		var rpcReqs []*eth.JSONRPCRequest
+		if err := c.Bind(&rpcReqs); err != nil {
+			return err
+		}
+
+		results := make([]*eth.JSONRPCResult, 0, len(rpcReqs))
+
+		for _, req := range rpcReqs {
+			result, err := callHttpHandler(cc, req)
+			if err != nil {
+				return err
+			}
+
+			results = append(results, result)
+		}
+
+		return c.JSON(http.StatusOK, results)
+	}
+}
+
+func callHttpHandler(cc *myCtx, req *eth.JSONRPCRequest) (*eth.JSONRPCResult, error) {
+	reqBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpreq := httptest.NewRequest(echo.POST, "/", ioutil.NopCloser(bytes.NewReader(reqBytes)))
+	httpreq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	newCtx := cc.Echo().NewContext(httpreq, rec)
+	myCtx := &myCtx{
+		Context:     newCtx,
+		logger:      cc.logger,
+		transformer: cc.transformer,
+	}
+	newCtx.Set("myctx", myCtx)
+
+	if err = httpHandler(myCtx); err != nil {
+		errorHandler(err, myCtx)
+	}
+
+	var result *eth.JSONRPCResult
+	if err = json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
