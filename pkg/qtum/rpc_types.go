@@ -95,7 +95,7 @@ type (
 			} `json:"reject"`
 			Version int64 `json:"version"`
 		} `json:"softforks"`
-		Verificationprogress int64 `json:"verificationprogress"`
+		Verificationprogress float64 `json:"verificationprogress"`
 	}
 )
 
