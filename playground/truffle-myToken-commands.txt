@@ -1,6 +1,13 @@
 var token
+
+# qcli gethexaddress qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW
+# 7926223070547d2d15b2ef5e7383e541c338ffe9
+
+# qcli gethexaddress qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf
+# 2352be3db3177f0a07efbe6da5857615b8c9901d
+
 var acc1 = "0x7926223070547d2d15b2ef5e7383e541c338ffe9"
-var acc2 = "0x3a895d2af552600f1f585425318c13a5aa25f01a"
+var acc2 = "0x2352be3db3177f0a07efbe6da5857615b8c9901d"
 
 MyToken.deployed().then(function(i) { token = i })
 
