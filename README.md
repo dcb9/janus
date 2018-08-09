@@ -3,7 +3,14 @@ Qtum adapter to Ethereum JSON RPC
 
 Table of Contents
 =================
+
+* [Requirements](#requirements)
+* [Installation](#installation)
 * [Start server](#start-server)
+* [Truffle](#truffle)
+   * [Migration](#migration)
+   * [Test SimpleStore](#test-simplestore)
+   * [Test ERC20](#test-erc20)
 * [ERC20 with QtumJS](#erc20-with-qtumjs)
    * [Deploy myToken](#deploy-mytoken)
    * [Methods](#methods)
@@ -26,38 +33,153 @@ Table of Contents
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
+## Requirements
+
+- Golang
+- Docker
+- linux commands: `make`, `curl`
+- NodeJS
+- Yarn
+- Truffle
+
+## Installation
+
+```
+$ go get github.com/dcb9/janus/...
+$ cd $GOPATH/src/github.com/dcb9/janus/playground
+$ yarn install
+```
+
 ## Start server
 
 ```
-$ go run cli/janus/main.go --qtum-rpc="http://qtum:test@localhost:3889" --port=23889  --dev
+$ make run
+$ export ETH_RPC=http://0x7926223070547d2d15b2ef5e7383e541c338ffe9:@localhost:23889
 ```
 
-Open another terminal to do some fancy stuff
+it will init qtum wallet:
 
-// prepare two accounts
+- import test wallet
+  - qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW (hex 0x7926223070547d2d15b2ef5e7383e541c338ffe9 )
+  - qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf (hex 0x2352be3db3177f0a07efbe6da5857615b8c9901d )
+- fund two addresses above with uxtos
 
-```
-/dapp # qcli getnewaddress
-qc614qvV6Jgh6yei3wtCyWneqQtsq8Cpng
+## Truffle
 
-/dapp # qcli getnewaddress
-qd73nuEB1wFsz24TcQeg1QQU9zeQB7Uu1h
-
-/dapp # qcli gethexaddress qc614qvV6Jgh6yei3wtCyWneqQtsq8Cpng
-cb3cb8375fe457a11f041f9ff55373e1a5a78d19
-
-/dapp # qcli gethexaddress qd73nuEB1wFsz24TcQeg1QQU9zeQB7Uu1h
-d66789418ca152f5720b1c8dd04e9ff2f3891f6f
-```
-
-So your hexed addresses are `0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19` and `0xd66789418ca152f5720b1c8dd04e9ff2f3891f6f`
+### Migration
 
 ```
-// set environment
+truffle migrate
+```
 
-$ cd playground
-$ yarn install
-$ export ETH_RPC=http://0xcb3cb8375fe457a11f041f9ff55373e1a5a78d19:@localhost:23889
+### Test SimpleStore
+
+```
+$ truffle console
+truffle(development)> exec "./truffle-test-simpleStore.js"
+
+exec: store.get()
+value:  100
+
+exec: store.set(184)
+receipt:  { tx: 'ef3469b6473c700c5775ea22c8003b7b52d720a26af0108a2ef9e2684ee77c11',
+  receipt:
+   { transactionHash: '0xef3469b6473c700c5775ea22c8003b7b52d720a26af0108a2ef9e2684ee77c11',
+     transactionIndex: 1,
+     blockHash: '0x5b276c69975588c9bcf6da3dd85187be6ff816d77d6a1bcc67f5a7cb169b79a1',
+     blockNumber: 633,
+     cumulativeGasUsed: 28604,
+     gasUsed: 28604,
+     contractAddress: '0xe2266d26dbb997f26327bf64f202061ce709e600',
+     logs: [ [Object] ],
+     logsBloom: '',
+     status: '0x1' },
+  logs:
+   [ { logIndex: 0,
+       transactionIndex: 1,
+       transactionHash: '0xef3469b6473c700c5775ea22c8003b7b52d720a26af0108a2ef9e2684ee77c11',
+       blockHash: '0x5b276c69975588c9bcf6da3dd85187be6ff816d77d6a1bcc67f5a7cb169b79a1',
+       blockNumber: 633,
+       address: '0xe2266d26dbb997f26327bf64f202061ce709e600',
+       event: 'UpdateValue',
+       args: [Object] } ] }
+
+exec: store.get()
+value:  184
+```
+
+### Test ERC20
+
+```
+truffle(development)> var token
+
+truffle(development)> var acc1 = "0x7926223070547d2d15b2ef5e7383e541c338ffe9"
+truffle(development)> var acc2 = "0x2352be3db3177f0a07efbe6da5857615b8c9901d"
+
+truffle(development)> MyToken.deployed().then(function(i) { token = i })
+
+truffle(development)> token.mint(acc1, 100)
+{ tx: '7d310aa0bdc0532af9e5fceec296d0a45225dffb3214929f8889d0788de62f80',
+  receipt:
+   { transactionHash: '0x7d310aa0bdc0532af9e5fceec296d0a45225dffb3214929f8889d0788de62f80',
+     transactionIndex: 1,
+     blockHash: '0x4735770fe79995cbfbe905241f305373733e310ae1b74d4bb49731930d909c66',
+     blockNumber: 638,
+     cumulativeGasUsed: 68569,
+     gasUsed: 68569,
+     contractAddress: '0xa6f433f17ceedaea685fbb9a5d0776c50c84a2cd',
+     logs: [ [Object], [Object] ],
+     logsBloom: '',
+     status: '0x1' },
+  logs:
+   [ { logIndex: 0,
+       transactionIndex: 1,
+       transactionHash: '0x7d310aa0bdc0532af9e5fceec296d0a45225dffb3214929f8889d0788de62f80',
+       blockHash: '0x4735770fe79995cbfbe905241f305373733e310ae1b74d4bb49731930d909c66',
+       blockNumber: 638,
+       address: '0xa6f433f17ceedaea685fbb9a5d0776c50c84a2cd',
+       event: 'Mint',
+       args: [Object] },
+     { logIndex: 1,
+       transactionIndex: 1,
+       transactionHash: '0x7d310aa0bdc0532af9e5fceec296d0a45225dffb3214929f8889d0788de62f80',
+       blockHash: '0x4735770fe79995cbfbe905241f305373733e310ae1b74d4bb49731930d909c66',
+       blockNumber: 638,
+       address: '0xa6f433f17ceedaea685fbb9a5d0776c50c84a2cd',
+       event: 'Transfer',
+       args: [Object] } ] }
+
+truffle(development)> token.balanceOf(acc1).then(function(res) { console.log(res.toNumber()) })
+100
+
+truffle(development)> token.transfer(acc2, 10, {from: acc1})
+{ tx: '029cf6599a58df639e3a9a0db08aeaf57b06e7955756d6ed32548cbeca68cb48',
+  receipt:
+   { transactionHash: '0x029cf6599a58df639e3a9a0db08aeaf57b06e7955756d6ed32548cbeca68cb48',
+     transactionIndex: 1,
+     blockHash: '0x7d2025a7339d8c0ba39a2c9fddf5b4abdc2df28c096897e1958af51c0243bb56',
+     blockNumber: 639,
+     cumulativeGasUsed: 51613,
+     gasUsed: 51613,
+     contractAddress: '0xa6f433f17ceedaea685fbb9a5d0776c50c84a2cd',
+     logs: [ [Object] ],
+     logsBloom: '',
+     status: '0x1' },
+  logs:
+   [ { logIndex: 0,
+       transactionIndex: 1,
+       transactionHash: '0x029cf6599a58df639e3a9a0db08aeaf57b06e7955756d6ed32548cbeca68cb48',
+       blockHash: '0x7d2025a7339d8c0ba39a2c9fddf5b4abdc2df28c096897e1958af51c0243bb56',
+       blockNumber: 639,
+       address: '0xa6f433f17ceedaea685fbb9a5d0776c50c84a2cd',
+       event: 'Transfer',
+       args: [Object] } ] }
+
+truffle(development)> token.balanceOf(acc1).then(function(res) { console.log(res.toNumber()) })
+90
+
+truffle(development)> token.balanceOf(acc2).then(function(res) { console.log(res.toNumber()) })
+10
 ```
 
 ## ERC20 with QtumJS
