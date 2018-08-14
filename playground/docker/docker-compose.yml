@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  qtumportal:
+    build: ./qtumportal
+    ports:
+    - "5000:5000"
+    volumes:
+    - ./data:/dapp
+  insightapi:
+    build: ./insightapi
+    links:
+    - mongo
+    #    - qtumportal
+    volumes:
+    - ./data:/dapp
+    ports:
+    - "3001:3001"
+
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ""
+      MONGO_INITDB_ROOT_PASSWORD: ""

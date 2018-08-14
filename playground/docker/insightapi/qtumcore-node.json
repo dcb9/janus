@@ -1,0 +1,37 @@
+{
+  "network": "livenet",
+  "port": 3001,
+  "services": [
+    "qtumd",
+    "qtum-insight-api",
+    "qtum-explorer",
+    "web"
+  ],
+  "servicesConfig": {
+    "qtum-explorer": {
+      "apiPrefix": "insight-api",
+      "routePrefix": "explorer",
+      "nodemapLink": "https://qtum.org/en/nodemap"
+    },
+    "qtum-insight-api": {
+      "routePrefix": "insight-api",
+      "disableRateLimiter": true,
+      "db": {
+        "host": "mongo",
+        "port": "27017",
+        "database": "qtum-api-livenet",
+        "user": "",
+        "password": ""
+      },
+      "erc20": {
+        "updateFromBlockHeight": 0
+      }
+    },
+     "qtumd": {
+      "spawn": {
+        "datadir": "/dapp/.qtum",
+        "exec": "qtumd"
+      }
+    }
+  }
+}
