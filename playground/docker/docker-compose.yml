@@ -1,22 +1,22 @@
 version: '3'
 
 services:
-  qtumportal:
-    build: ./qtumportal
+  janus:
+    build: ./janus
     ports:
-    - "5000:5000"
+    - "23889:23889"
     volumes:
     - ./data:/dapp
+    links:
+    - insightapi:qtumd
   insightapi:
     build: ./insightapi
     links:
     - mongo
-    #    - qtumportal
     volumes:
     - ./data:/dapp
     ports:
     - "3001:3001"
-
 
   mongo:
     image: mongo
