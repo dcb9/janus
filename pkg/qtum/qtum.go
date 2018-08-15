@@ -1,6 +1,7 @@
 package qtum
 
 import (
+	"github.com/dcb9/janus/pkg/qtum/insight"
 	"github.com/dcb9/janus/pkg/utils"
 	"github.com/pkg/errors"
 )
@@ -8,7 +9,8 @@ import (
 type Qtum struct {
 	*Client
 	*Method
-	chain string
+	chain   string
+	Insight *insight.Insight
 }
 
 const (
@@ -19,15 +21,16 @@ const (
 
 var AllChains = []string{ChainMain, ChainRegTest, ChainTest}
 
-func New(c *Client, chain string) (*Qtum, error) {
+func New(c *Client, chain string, insight *insight.Insight) (*Qtum, error) {
 	if !utils.InStrSlice(AllChains, chain) {
 		return nil, errors.New("invalid qtum chain")
 	}
 
 	return &Qtum{
-		Client: c,
-		Method: &Method{Client: c},
-		chain:  chain,
+		Client:  c,
+		Method:  &Method{Client: c},
+		chain:   chain,
+		Insight: insight,
 	}, nil
 }
 

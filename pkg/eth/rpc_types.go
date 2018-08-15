@@ -310,3 +310,116 @@ func (r *GetFilterChangesRequest) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+// ========== eth_getTransactionCount ============= //
+type GetTransactionCountRequest struct {
+	Address     string
+	BlockNumber json.RawMessage
+}
+
+// integer of the number of transactions send from this address.
+type GetTransactionCountResponse string
+
+func (r *GetTransactionCountRequest) UnmarshalJSON(data []byte) error {
+	var params []json.RawMessage
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) < 2 {
+		return errors.New("params must be set")
+	}
+
+	var addr string
+	if err = json.Unmarshal(params[0], &addr); err != nil {
+		return err
+	}
+
+	r.Address = addr
+	r.BlockNumber = params[1]
+
+	return nil
+}
+
+// ========== eth_getBalance ============= //
+type GetBalanceRequest struct {
+	Address     string
+	BlockNumber json.RawMessage
+}
+
+// integer of the current balance in wei.
+type GetBalanceResponse string
+
+func (r *GetBalanceRequest) UnmarshalJSON(data []byte) error {
+	var params []json.RawMessage
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) < 2 {
+		return errors.New("params must be set")
+	}
+
+	var addr string
+	if err = json.Unmarshal(params[0], &addr); err != nil {
+		return err
+	}
+
+	r.Address = addr
+	r.BlockNumber = params[1]
+
+	return nil
+}
+
+// ========== eth_getBlockByNumber ============= //
+type GetBlockByNumberRequest struct {
+	BlockNumber json.RawMessage
+	// If `true` it returns the full transaction objects,
+	// if `false` only the hashes of the transactions.
+	FullTransactions bool
+}
+
+type GetBlockByNumberResponse struct {
+	Number           string        `json:"number"`
+	Hash             string        `json:"hash"`
+	ParentHash       string        `json:"parentHash"`
+	Nonce            string        `json:"nonce"`
+	Sha3Uncles       string        `json:"sha3Uncles"`
+	LogsBloom        string        `json:"logsBloom"`
+	TransactionsRoot string        `json:"transactionsRoot"`
+	StateRoot        string        `json:"stateRoot"`
+	Miner            string        `json:"miner"`
+	Difficulty       string        `json:"difficulty"`
+	TotalDifficulty  string        `json:"totalDifficulty"`
+	ExtraData        string        `json:"extraData"`
+	Size             string        `json:"size"`
+	GasLimit         string        `json:"gasLimit"`
+	GasUsed          string        `json:"gasUsed"`
+	Timestamp        string        `json:"timestamp"`
+	Transactions     []interface{} `json:"transactions"`
+	Uncles           []string      `json:"uncles"`
+}
+
+func (r *GetBlockByNumberRequest) UnmarshalJSON(data []byte) error {
+	var params []json.RawMessage
+	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return err
+	}
+
+	if len(params) < 2 {
+		return errors.New("params must be set")
+	}
+
+	var fullTransactions bool
+	if err = json.Unmarshal(params[1], &fullTransactions); err != nil {
+		return err
+	}
+
+	r.FullTransactions = fullTransactions
+	r.BlockNumber = params[0]
+
+	return nil
+}

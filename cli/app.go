@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dcb9/janus/pkg/qtum"
+	"github.com/dcb9/janus/pkg/qtum/insight"
 	"github.com/dcb9/janus/pkg/server"
 	"github.com/dcb9/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
@@ -16,11 +17,12 @@ import (
 var (
 	app = kingpin.New("janus", "Qtum adapter to Ethereum JSON RPC")
 
-	qtumRPC     = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
-	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
-	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
-	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
-	devMode     = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
+	qtumRPC         = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
+	qtumNetwork     = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
+	bind            = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
+	port            = app.Flag("port", "port to serve proxy").Default("23889").Int()
+	devMode         = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
+	insightEndpoint = app.Flag("insight-endpoint", "insight api endpoint").Default("http://qtumd:3001/insight-api").String()
 )
 
 func action(pc *kingpin.ParseContext) error {
@@ -36,7 +38,8 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "jsonrpc#New")
 	}
 
-	qtumClient, err := qtum.New(qtumJSONRPC, *qtumNetwork)
+	insight := newInsight(*qtumNetwork, *insightEndpoint)
+	qtumClient, err := qtum.New(qtumJSONRPC, *qtumNetwork, insight)
 	if err != nil {
 		return errors.Wrap(err, "qtum#New")
 	}
@@ -60,4 +63,15 @@ func Run() {
 
 func init() {
 	app.Action(action)
+}
+
+func newInsight(chain string, endpoint string) *insight.Insight {
+	switch chain {
+	case qtum.ChainMain:
+		endpoint = insight.MainNetEndpoint
+	case qtum.ChainTest:
+		endpoint = insight.TestNetEndpoint
+	}
+
+	return insight.New(endpoint)
 }
