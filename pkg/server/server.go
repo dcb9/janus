@@ -52,6 +52,7 @@ func New(
 
 func (s *Server) Start() error {
 	e := s.echo
+	e.Use(middleware.CORS())
 	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, resp []byte) {
 		myctx := c.Get("myctx")
 		cc, ok := myctx.(*myCtx)
