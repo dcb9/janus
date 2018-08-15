@@ -1,6 +1,7 @@
 App = {
   web3Provider: null,
   contracts: {},
+  account: "",
 
   init: function() {
     // Load pets.
@@ -20,16 +21,20 @@ App = {
       }
     });
 
+    App.login()
     return App.initWeb3();
   },
 
   initWeb3: function() {
+    /*
     if (typeof web3 !== 'undefined') {
       App.web3Provider = web3.currentProvider;
     } else {
       // If no injected web3 instance is detected, fall back to Ganache
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
     }
+    */
+    App.web3Provider = new Web3.providers.HttpProvider('http://localhost:23889');
     return App.initContract();
   },
 
@@ -62,8 +67,17 @@ App = {
       return adoptionInstance.getAdopters.call();
     }).then(function(adopters) {
       for (var i = 0; i < adopters.length; i++) {
-        if (adopters[i] !== '0x0000000000000000000000000000000000000000') {
-          $('.panel-pet').eq(i).find('button').text('Success').attr('disabled', true);
+        const adopter = adopters[i];
+        if (adopter !== '0x0000000000000000000000000000000000000000') {
+          $('.panel-pet').eq(i).find('button').text('Adopted').attr('disabled', true);
+          $('.panel-pet').eq(i).find('.pet-adopter-container').css('display', 'block');
+          let adopterLabel = adopter;
+          if (adopter === App.account) {
+            adopterLabel = "You"
+          }
+          $('.panel-pet').eq(i).find('.pet-adopter-address').text(adopterLabel);
+        } else {
+          $('.panel-pet').eq(i).find('.pet-adopter-container').css('display', 'none');
         }
       }
     }).catch(function(err) {
@@ -78,23 +92,34 @@ App = {
 
     var adoptionInstance;
 
-    web3.eth.getAccounts(function(error, accounts) {
-      if (error) {
-        throw error
-      }
+    App.contracts.Adoption.deployed().then(function(instance) {
+      adoptionInstance = instance;
 
-      var account = accounts[0];
-
-      App.contracts.Adoption.deployed().then(function(instance) {
-        adoptionInstance = instance;
-
-        return adoptionInstance.adopt(petId, {from: account});
-      }).then(function(result) {
-        return App.markAdopted()
-      }).catch(function(err) {
-        console.log(err.message);
-      });
+      return adoptionInstance.adopt(petId, {from: App.account});
+    }).then(function(result) {
+      return App.markAdopted();
+    }).catch(function(err) {
+      console.log(err.message);
     });
+  },
+
+  login: function() {
+    let walletAddress = localStorage.getItem("userWalletAddress");
+    while (!walletAddress) {
+      walletAddress = window.prompt("Please enter your wallet address");
+      if (walletAddress) {
+        localStorage.setItem("userWalletAddress", walletAddress);
+      }
+    }
+
+    App.account = walletAddress;
+  },
+
+  handleLogout: function() {
+    localStorage.removeItem("userWalletAddress");
+
+    App.login();
+    App.markAdopted();
   }
 };
 

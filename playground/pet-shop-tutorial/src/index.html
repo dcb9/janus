@@ -18,6 +18,9 @@
     <![endif]-->
   </head>
   <body>
+    <div style="position: fixed; left: 0">
+        <button onclick="App.handleLogout()">Logout</button>
+    </div>
     <div class="container">
       <div class="row">
         <div class="col-xs-12 col-sm-8 col-sm-push-2">
@@ -43,8 +46,9 @@
             <br/><br/>
             <strong>Breed</strong>: <span class="pet-breed">Golden Retriever</span><br/>
             <strong>Age</strong>: <span class="pet-age">3</span><br/>
-            <strong>Location</strong>: <span class="pet-location">Warren, MI</span><br/><br/>
-            <button class="btn btn-default btn-adopt" type="button" data-id="0">Adopt</button>
+            <strong>Location</strong>: <span class="pet-location">Warren, MI</span>
+            <p class="pet-adopter-container"><strong>Adopter</strong>: <span class="pet-adopter-address"></span></p>
+            <p><button class="btn btn-default btn-adopt" type="button" data-id="0">Adopt</button></p>
           </div>
         </div>
       </div>
