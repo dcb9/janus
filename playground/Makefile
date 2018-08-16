@@ -16,7 +16,6 @@ run:
 	  -p 3889:3889 \
 	  -p 23889:23889 \
 	  $(img_tag)
-	make init-container
 
 .PHONY: stop
 stop:
@@ -37,3 +36,14 @@ logs:
 .PHONY: clean-qtum-data
 clean-qtum-data:
 	rm -rf ./docker/.qtum
+
+.PHONY: deploy-contracts
+deploy-contracts:
+	truffle migrate --reset
+	cd pet-shop-tutorial && truffle migrate --reset
+
+.PHONY: serve-pet-shop
+serve-pet-shop:
+	cd pet-shop-tutorial; yarn
+	echo "Two prefund accounts you can login with: \n 0x7926223070547d2d15b2ef5e7383e541c338ffe9 \n 0x2352be3db3177f0a07efbe6da5857615b8c9901d"
+	cd pet-shop-tutorial; yarn dev &> /dev/null

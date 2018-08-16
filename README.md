@@ -6,6 +6,7 @@ Table of Contents
 
 * [Requirements](#requirements)
 * [Installation](#installation)
+* [Pet Shop](#pet-shop)
 * [Start server](#start-server)
 * [Truffle](#truffle)
    * [Migration](#migration)
@@ -48,6 +49,21 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 $ go get github.com/dcb9/janus/...
 $ cd $GOPATH/src/github.com/dcb9/janus/playground
 $ yarn install
+```
+
+## Pet Shop
+
+```
+cd playground
+
+make run init-container deploy-contracts serve-pet-shop
+# It will open http://localhost:3000 automatically
+# Two prefund accounts you can login with:
+#   0x7926223070547d2d15b2ef5e7383e541c338ffe9
+#   0x2352be3db3177f0a07efbe6da5857615b8c9901d
+
+# clean
+make stop clean-qtum-data
 ```
 
 ## Start server
