@@ -1,7 +1,8 @@
 package server
 
 import (
-	"log"
+	"encoding/json"
+	stdLog "log"
 
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/go-kit/kit/log/level"
@@ -16,10 +17,28 @@ func httpHandler(c echo.Context) error {
 		return errors.New("Could not find myctx")
 	}
 
+	var rpcReq *eth.JSONRPCRequest
+	decoder := json.NewDecoder(c.Request().Body)
+	if err := decoder.Decode(&rpcReq); err != nil {
+		return err
+	}
+
+	cc.rpcReq = rpcReq
+
 	level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
-	result, err := cc.transformer.Transform(cc.rpcReq)
+	result, err := cc.transformer.Transform(rpcReq)
 	level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
+
 	if err != nil {
+		err1 := errors.Cause(err)
+		if err != err1 {
+			level.Error(cc.logger).Log("err", err.Error())
+			return cc.JSONRPCError(&eth.JSONRPCError{
+				Code:    100,
+				Message: err1.Error(),
+			})
+		}
+
 		return err
 	}
 
@@ -30,19 +49,15 @@ func errorHandler(err error, c echo.Context) {
 	myctx := c.Get("myctx")
 	cc, ok := myctx.(*myCtx)
 	if ok {
-		err1 := errors.Cause(err)
-		if err != err1 {
-			level.Error(cc.logger).Log("err", err.Error())
-		}
-		cc.JSONRPCError(&eth.JSONRPCError{
+		level.Error(cc.logger).Log("err", err.Error())
+		if err := cc.JSONRPCError(&eth.JSONRPCError{
 			Code:    100,
-			Message: err1.Error(),
-		})
-
+			Message: err.Error(),
+		}); err != nil {
+			level.Error(cc.logger).Log("msg", "reply to client", "err", err.Error())
+		}
 		return
 	}
 
-	log.Println("errorHandler", err.Error())
-
-	c.Echo().DefaultHTTPErrorHandler(err, c)
+	stdLog.Println("errorHandler", err.Error())
 }

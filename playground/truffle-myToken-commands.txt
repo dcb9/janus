@@ -1,0 +1,22 @@
+var token
+
+# qcli gethexaddress qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW
+# 7926223070547d2d15b2ef5e7383e541c338ffe9
+
+# qcli gethexaddress qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf
+# 2352be3db3177f0a07efbe6da5857615b8c9901d
+
+var acc1 = "0x7926223070547d2d15b2ef5e7383e541c338ffe9"
+var acc2 = "0x2352be3db3177f0a07efbe6da5857615b8c9901d"
+
+MyToken.deployed().then(function(i) { token = i })
+
+token.totalSupply().then(function(res) { console.log(res.toNumber()) })
+
+token.balanceOf(acc1).then(function(res) { console.log(res.toNumber()) })
+
+token.balanceOf(acc2).then(function(res) { console.log(res.toNumber()) })
+
+token.mint(acc1, 100)
+
+token.transfer(acc2, 10, {from: acc1})

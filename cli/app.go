@@ -16,10 +16,11 @@ import (
 var (
 	app = kingpin.New("janus", "Qtum adapter to Ethereum JSON RPC")
 
-	qtumRPC = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
-	bind    = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
-	port    = app.Flag("port", "port to serve proxy").Default("23889").Int()
-	devMode = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
+	qtumRPC     = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
+	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
+	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
+	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
+	devMode     = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
 )
 
 func action(pc *kingpin.ParseContext) error {
@@ -34,7 +35,11 @@ func action(pc *kingpin.ParseContext) error {
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
 	}
-	qtumClient := qtum.New(qtumJSONRPC)
+
+	qtumClient, err := qtum.New(qtumJSONRPC, *qtumNetwork)
+	if err != nil {
+		return errors.Wrap(err, "qtum#New")
+	}
 
 	t, err := transformer.New(qtumClient, transformer.DefaultProxies(qtumClient), transformer.SetDebug(*devMode), transformer.SetLogger(logger))
 	if err != nil {

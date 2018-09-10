@@ -6,6 +6,12 @@
   "dependencies": {
     "minimist": "^1.2.0",
     "ora": "^3.0.0",
-    "qtumjs": "^1.9.1"
+    "truffle": "^4.1.13",
+    "qtumjs": "ceoimon/qtumjs-eth#master",
+    "truffle-contract": "^3.0.6",
+    "truffle-require": "^1.0.7"
+  },
+  "scripts": {
+    "postinstall": "cd node_modules/qtumjs/ && yarn && yarn build ; cd ../../ "
   }
 }

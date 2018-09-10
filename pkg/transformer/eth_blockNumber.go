@@ -1,8 +1,6 @@
 package transformer
 
 import (
-	"math/big"
-
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -22,8 +20,8 @@ func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest) (interface{}, error
 }
 
 func (p *ProxyETHBlockNumber) request() (*eth.BlockNumberResponse, error) {
-	var qtumresp *qtum.GetBlockCountResponse
-	if err := p.Qtum.Request(qtum.MethodGetBlockCount, nil, &qtumresp); err != nil {
+	qtumresp, err := p.Qtum.GetBlockCount()
+	if err != nil {
 		return nil, err
 	}
 
@@ -32,8 +30,7 @@ func (p *ProxyETHBlockNumber) request() (*eth.BlockNumberResponse, error) {
 }
 
 func (p *ProxyETHBlockNumber) ToResponse(qtumresp *qtum.GetBlockCountResponse) *eth.BlockNumberResponse {
-	v := big.Int(*qtumresp)
-	hexVal := hexutil.EncodeBig(&v)
+	hexVal := hexutil.EncodeBig(qtumresp.Int)
 	ethresp := eth.BlockNumberResponse(hexVal)
 	return &ethresp
 }
