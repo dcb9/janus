@@ -90,6 +90,9 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHNewBlockFilter{Qtum: qtumRPCClient, blockFilter: blockFilter},
 		&ProxyETHGetFilterChanges{Qtum: qtumRPCClient, blockFilter: blockFilter},
 		&ProxyETHUninstallFilter{Qtum: qtumRPCClient, blockFilter: blockFilter},
+
+		&ProxyETHEstimateGas{Qtum: qtumRPCClient},
+		&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient},
 	}
 }
 

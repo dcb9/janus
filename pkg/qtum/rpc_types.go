@@ -723,3 +723,139 @@ func (r *GenerateRequest) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(params)
 }
+
+// ========== GetBlockHeader ============= //
+type (
+	GetBlockHeaderRequest struct {
+		Hash       string
+		NotVerbose bool
+	}
+
+	/*
+		{
+		  "hash": "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5",
+		  "confirmations": 1,
+		  "height": 3983,
+		  "version": 536870912,
+		  "versionHex": "20000000",
+		  "merkleroot": "0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
+		  "time": 1536551888,
+		  "mediantime": 1536551728,
+		  "nonce": 0,
+		  "bits": "207fffff",
+		  "difficulty": 4.656542373906925e-10,
+		  "chainwork": "0000000000000000000000000000000000000000000000000000000000001f20",
+		  "hashStateRoot": "3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
+		  "hashUTXORoot": "130a3e712d9f8b06b83f5ebf02b27542fb682cdff3ce1af1c17b804729d88a47",
+		  "previousblockhash": "6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
+		  "flags": "proof-of-stake",
+		  "proofhash": "15bd6006ecbab06708f705ecf68664b78b388e4d51416cdafb019d5b90239877",
+		  "modifier": "a79c00d1d570743ca8135a173d535258026d26bafbc5f3d951c3d33486b1f120"
+		}
+	*/
+	GetBlockHeaderResponse struct {
+		Hash              string  `json:"hash"`
+		Confirmations     int     `json:"confirmations"`
+		Height            int     `json:"height"`
+		Version           int     `json:"version"`
+		VersionHex        string  `json:"versionHex"`
+		Merkleroot        string  `json:"merkleroot"`
+		Time              uint64  `json:"time"`
+		Mediantime        int     `json:"mediantime"`
+		Nonce             int     `json:"nonce"`
+		Bits              string  `json:"bits"`
+		Difficulty        float64 `json:"difficulty"`
+		Chainwork         string  `json:"chainwork"`
+		HashStateRoot     string  `json:"hashStateRoot"`
+		HashUTXORoot      string  `json:"hashUTXORoot"`
+		Previousblockhash string  `json:"previousblockhash"`
+		Flags             string  `json:"flags"`
+		Proofhash         string  `json:"proofhash"`
+		Modifier          string  `json:"modifier"`
+	}
+)
+
+func (r *GetBlockHeaderRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{
+		r.Hash,
+		!r.NotVerbose,
+	})
+}
+
+// ========== GetBlock ============= //
+type (
+	GetBlockRequest struct {
+		Hash      string
+		Verbosity *int
+	}
+
+	/*
+		{
+		  "hash": "bba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5",
+		  "confirmations": 57,
+		  "strippedsize": 584,
+		  "size": 620,
+		  "weight": 2372,
+		  "height": 3983,
+		  "version": 536870912,
+		  "versionHex": "20000000",
+		  "merkleroot": "0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
+		  "hashStateRoot": "3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
+		  "hashUTXORoot": "130a3e712d9f8b06b83f5ebf02b27542fb682cdff3ce1af1c17b804729d88a47",
+		  "tx": [
+		    "3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
+		    "8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"
+		  ],
+		  "time": 1536551888,
+		  "mediantime": 1536551728,
+		  "nonce": 0,
+		  "bits": "207fffff",
+		  "difficulty": 4.656542373906925e-10,
+		  "chainwork": "0000000000000000000000000000000000000000000000000000000000001f20",
+		  "previousblockhash": "6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
+		  "nextblockhash": "d7758774cfdd6bab7774aa891ae035f1dc5a2ff44240784b5e7bdfd43a7a6ec1",
+		  "flags": "proof-of-stake",
+		  "proofhash": "15bd6006ecbab06708f705ecf68664b78b388e4d51416cdafb019d5b90239877",
+		  "modifier": "a79c00d1d570743ca8135a173d535258026d26bafbc5f3d951c3d33486b1f120",
+		  "signature": "3045022100a6ab6c2b14b1f73e734f1a61d4d22385748e48836492723a6ab37cdf38525aba022014a51ecb9e51f5a7a851641683541fec6f8f20205d0db49e50b2a4e5daed69d2"
+		}
+	*/
+	GetBlockResponse struct {
+		Hash              string   `json:"hash"`
+		Confirmations     int      `json:"confirmations"`
+		Strippedsize      int      `json:"strippedsize"`
+		Size              int      `json:"size"`
+		Weight            int      `json:"weight"`
+		Height            int      `json:"height"`
+		Version           int      `json:"version"`
+		VersionHex        string   `json:"versionHex"`
+		Merkleroot        string   `json:"merkleroot"`
+		HashStateRoot     string   `json:"hashStateRoot"`
+		HashUTXORoot      string   `json:"hashUTXORoot"`
+		Tx                []string `json:"tx"`
+		Time              int      `json:"time"`
+		Mediantime        int      `json:"mediantime"`
+		Nonce             int      `json:"nonce"`
+		Bits              string   `json:"bits"`
+		Difficulty        float64  `json:"difficulty"`
+		Chainwork         string   `json:"chainwork"`
+		Previousblockhash string   `json:"previousblockhash"`
+		Nextblockhash     string   `json:"nextblockhash"`
+		Flags             string   `json:"flags"`
+		Proofhash         string   `json:"proofhash"`
+		Modifier          string   `json:"modifier"`
+		Signature         string   `json:"signature"`
+	}
+)
+
+func (r *GetBlockRequest) MarshalJSON() ([]byte, error) {
+	verbosity := 1
+	if r.Verbosity != nil {
+		verbosity = *r.Verbosity
+	}
+
+	return json.Marshal([]interface{}{
+		r.Hash,
+		verbosity,
+	})
+}

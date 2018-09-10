@@ -65,6 +65,22 @@ func (m *Method) GetBlockHash(b *big.Int) (resp GetBlockHashResponse, err error)
 	return
 }
 
+func (m *Method) GetBlockHeader(hash string) (resp *GetBlockHeaderResponse, err error) {
+	req := GetBlockHeaderRequest{
+		Hash: hash,
+	}
+	err = m.Request(MethodGetBlockHeader, &req, &resp)
+	return
+}
+
+func (m *Method) GetBlock(hash string) (resp *GetBlockResponse, err error) {
+	req := GetBlockRequest{
+		Hash: hash,
+	}
+	err = m.Request(MethodGetBlock, &req, &resp)
+	return
+}
+
 func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
 	req := GenerateRequest{
 		BlockNum: blockNum,

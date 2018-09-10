@@ -24,6 +24,8 @@ const (
 	MethodSearchLogs            = "searchlogs"
 	MethodWaitForLogs           = "waitforlogs"
 	MethodGetBlockHash          = "getblockhash"
+	MethodGetBlockHeader        = "getblockheader"
+	MethodGetBlock              = "getblock"
 	MethodGetAddressesByAccount = "getaddressesbyaccount"
 	MethodGetAccountInfo        = "getaccountinfo"
 	MethodGenerate              = "generate"
