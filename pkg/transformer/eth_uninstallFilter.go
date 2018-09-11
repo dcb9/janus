@@ -9,7 +9,7 @@ import (
 // ProxyETHUninstallFilter implements ETHProxy
 type ProxyETHUninstallFilter struct {
 	*qtum.Qtum
-	blockFilter *BlockFilterSimulator
+	filter *eth.FilterSimulator
 }
 
 func (p *ProxyETHUninstallFilter) Method() string {
@@ -32,7 +32,7 @@ func (p *ProxyETHUninstallFilter) request(ethreq *eth.UninstallFilterRequest) (e
 	}
 
 	// uninstall
-	p.blockFilter.Uninstall(id)
+	p.filter.Uninstall(id)
 
 	return true, nil
 }

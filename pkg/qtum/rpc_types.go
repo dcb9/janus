@@ -599,6 +599,7 @@ type (
 		FromBlock *big.Int
 		ToBlock   *big.Int
 		Addresses []string
+		Topics    []interface{}
 	}
 
 	SearchLogsResponse []TransactionReceiptStruct
@@ -612,13 +613,21 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 		4. "topics"           (string, optional) An array of values from which at least one must appear in the log entries. The order is important, if you want to leave topics out use null, e.g. ["null", "0x00..."].
 		5. "minconf"          (uint, optional, default=0) Minimal number of confirmations before a log is returned
 	*/
-	return json.Marshal([]interface{}{
+	data := []interface{}{
 		r.FromBlock,
 		r.ToBlock,
 		map[string][]string{
 			"addresses": r.Addresses,
 		},
-	})
+	}
+
+	if len(r.Topics) > 0 {
+		data = append(data, map[string][]interface{}{
+			"topics": r.Topics,
+		})
+	}
+
+	return json.Marshal(data)
 }
 
 // ========== GetAccountInfo ============= //

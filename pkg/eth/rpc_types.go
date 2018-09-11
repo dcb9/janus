@@ -291,9 +291,7 @@ func (r *UninstallFilterRequest) UnmarshalJSON(data []byte) error {
 // the filter id
 type GetFilterChangesRequest string
 
-//For filters created with eth_newBlockFilter the return are block hashes (DATA, 32 Bytes),
-// e.g. ["0x3454645634534..."].
-type GetFilterChangesResponse []string
+type GetFilterChangesResponse []interface{}
 
 func (r *GetFilterChangesRequest) UnmarshalJSON(data []byte) error {
 	var params []string
@@ -387,3 +385,35 @@ func (r *GetBlockByNumberRequest) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+// ========== eth_newFilter ============= //
+
+type NewFilterRequest struct {
+	FromBlock json.RawMessage `json:"fromBlock"`
+	ToBlock   json.RawMessage `json:"toBlock"`
+	Address   json.RawMessage `json:"address"`
+	Topics    []interface{}   `json:"topics"`
+}
+
+func (r *NewFilterRequest) UnmarshalJSON(data []byte) error {
+	var params []json.RawMessage
+	if err := json.Unmarshal(data, &params); err != nil {
+		return err
+	}
+
+	if len(params) == 0 {
+		return errors.New("params must be set")
+	}
+	type Req NewFilterRequest
+	var req Req
+
+	if err := json.Unmarshal(params[0], &req); err != nil {
+		return err
+	}
+
+	*r = NewFilterRequest(req)
+
+	return nil
+}
+
+type NewFilterResponse string

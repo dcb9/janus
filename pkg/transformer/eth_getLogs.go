@@ -39,8 +39,8 @@ func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest) (interface{}, erro
 }
 
 func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResponse, error) {
-	var receipts qtum.SearchLogsResponse
-	if err := p.Qtum.Request(qtum.MethodSearchLogs, req, &receipts); err != nil {
+	receipts, err := p.SearchLogs(req)
+	if err != nil {
 		return nil, err
 	}
 

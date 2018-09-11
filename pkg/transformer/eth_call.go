@@ -57,7 +57,7 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 
 	return &qtum.CallContractRequest{
 		To:       ethreq.To,
-		From:     ethreq.From,
+		From:     from,
 		Data:     ethreq.Data,
 		GasLimit: gasLimit,
 	}, nil

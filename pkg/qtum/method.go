@@ -89,3 +89,10 @@ func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, e
 	err = m.Request(MethodGenerate, &req, &resp)
 	return
 }
+
+func (m *Method) SearchLogs(req *SearchLogsRequest) (receipts SearchLogsResponse, err error) {
+	if err := m.Request(MethodSearchLogs, req, &receipts); err != nil {
+		return nil, err
+	}
+	return
+}
