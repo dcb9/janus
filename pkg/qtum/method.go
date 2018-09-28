@@ -96,3 +96,24 @@ func (m *Method) SearchLogs(req *SearchLogsRequest) (receipts SearchLogsResponse
 	}
 	return
 }
+
+func (m *Method) CallContract(req *CallContractRequest) (resp *CallContractResponse, err error) {
+	if err := m.Request(MethodCallContract, req, &resp); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func (m *Method) GetAccountInfo(req *GetAccountInfoRequest) (resp *GetAccountInfoResponse, err error) {
+	if err := m.Request(MethodGetAccountInfo, req, &resp); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse, err error) {
+	if err := m.Request(MethodListUnspent, req, &resp); err != nil {
+		return nil, err
+	}
+	return
+}

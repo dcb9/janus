@@ -417,3 +417,18 @@ func (r *NewFilterRequest) UnmarshalJSON(data []byte) error {
 }
 
 type NewFilterResponse string
+
+// ========== eth_getBalance ============= //
+
+type GetBalanceRequest struct {
+	Address string
+	Block   json.RawMessage
+}
+
+func (r *GetBalanceRequest) UnmarshalJSON(data []byte) error {
+	tmp := []interface{}{&r.Address, &r.Block}
+
+	return json.Unmarshal(data, &tmp)
+}
+
+type GetBalanceResponse string

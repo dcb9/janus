@@ -27,9 +27,9 @@ func (p *ProxyETHGetCode) Request(rawreq *eth.JSONRPCRequest) (interface{}, erro
 func (p *ProxyETHGetCode) request(ethreq *eth.GetCodeRequest) (eth.GetCodeResponse, error) {
 	qtumreq := qtum.GetAccountInfoRequest(utils.RemoveHexPrefix(ethreq.Address))
 
-	var qtumresp qtum.GetAccountInfoResponse
-	if err := p.Qtum.Request(qtum.MethodGetAccountInfo, &qtumreq, &qtumresp); err != nil {
-		return "", nil
+	qtumresp, err := p.GetAccountInfo(&qtumreq)
+	if err != nil {
+		return "", err
 	}
 
 	// qtum res -> eth res

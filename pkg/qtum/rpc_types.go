@@ -868,3 +868,96 @@ func (r *GetBlockRequest) MarshalJSON() ([]byte, error) {
 		verbosity,
 	})
 }
+
+// ========== ListUnspent ============= //
+type (
+
+	/*
+		Arguments:
+		1. minconf          (numeric, optional, default=1) The minimum confirmations to filter
+		2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter
+		3. "addresses"      (string) A json array of qtum addresses to filter
+		    [
+		      "address"     (string) qtum address
+		      ,...
+		    ]
+		4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend
+		                  See description of "safe" attribute below.
+		5. query_options    (json, optional) JSON with query options
+		    {
+		      "minimumAmount"    (numeric or string, default=0) Minimum value of each UTXO in QTUM
+		      "maximumAmount"    (numeric or string, default=unlimited) Maximum value of each UTXO in QTUM
+		      "maximumCount"     (numeric or string, default=unlimited) Maximum number of UTXOs
+		      "minimumSumAmount" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in QTUM
+		    }
+	*/
+	ListUnspentRequest struct {
+		MinConf   int
+		MaxConf   int
+		Addresses []string
+	}
+
+	/*
+				[                   (array of json object)
+					{
+						"txid" : "txid",          (string) the transaction id
+						"vout" : n,               (numeric) the vout value
+						"address" : "address",    (string) the qtum address
+						"account" : "account",    (string) DEPRECATED. The associated account, or "" for the default account
+						"scriptPubKey" : "key",   (string) the script key
+						"amount" : x.xxx,         (numeric) the transaction output amount in QTUM
+						"confirmations" : n,      (numeric) The number of confirmations
+						"redeemScript" : n        (string) The redeemScript if scriptPubKey is P2SH
+						"spendable" : xxx,        (bool) Whether we have the private keys to spend this output
+						"solvable" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys
+						"safe" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions
+							  from outside keys and unconfirmed replacement transactions are considered unsafe
+							  and are not eligible for spending by fundrawtransaction and sendtoaddress.
+					}
+					,...
+				]
+
+		[
+			{
+				"txid": "a8d97ae8bb819cd4aa98ed2ddaef4969783aee845461a9ea5a88184ad58f44fe",
+				"vout": 2,
+				"address": "qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW",
+				"account": "",
+				"scriptPubKey": "210299d391f528b9edd07284c7e23df8415232a8ce41531cf460a390ce32b4efd112ac",
+				"amount": 15007.10682200,
+				"confirmations": 532,
+				"spendable": true,
+				"solvable": true,
+				"safe": true
+			}
+		]
+	*/
+	ListUnspentResponse []struct {
+		Txid          string  `json:"txid"`
+		Vout          int     `json:"vout"`
+		Address       string  `json:"address"`
+		Account       string  `json:"account"`
+		ScriptPubKey  string  `json:"scriptPubKey"`
+		Amount        float64 `json:"amount"`
+		Confirmations int     `json:"confirmations"`
+		Spendable     bool    `json:"spendable"`
+		Solvable      bool    `json:"solvable"`
+		Safe          bool    `json:"safe"`
+	}
+)
+
+func NewListUnspentRequest(addresses ...string) *ListUnspentRequest {
+	return &ListUnspentRequest{
+		MinConf:   1,
+		MaxConf:   99999999,
+		Addresses: addresses,
+	}
+}
+
+func (r *ListUnspentRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{
+		r.MinConf,
+		r.MaxConf,
+		r.Addresses,
+	})
+}

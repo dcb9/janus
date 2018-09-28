@@ -691,10 +691,14 @@ curl --header 'Content-Type: application/json' --data \
   - tags, "pending" and "earliest", are unsupported
 - eth_accounts
 - eth_getCode
+- eth_newFilter
 - eth_newBlockFilter
 - eth_getFilterChanges
-  - only support filters created with `eth_newBlockFilter`
 - eth_uninstallFilter
+- eth_getFilterLogs
+- eth_getBlockByNumber
+- eth_estimateGas
+- eth_getBalance
 
 ## Known issues
 

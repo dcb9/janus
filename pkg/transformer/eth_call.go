@@ -26,13 +26,13 @@ func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) 
 
 func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (*eth.CallResponse, error) {
 	// eth req -> qtum req
-	params, err := p.ToRequest(ethreq)
+	qtumreq, err := p.ToRequest(ethreq)
 	if err != nil {
 		return nil, err
 	}
 
-	var qtumresp *qtum.CallContractResponse
-	if err = p.Qtum.Request(qtum.MethodCallContract, params, &qtumresp); err != nil {
+	qtumresp, err := p.CallContract(qtumreq)
+	if err != nil {
 		return nil, err
 	}
 
