@@ -54,6 +54,6 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		}
 
 		// 1 QTUM = 10 ^ 8 Satoshi
-		return hexutil.EncodeUint64(uint64(balance * 10e8)), nil
+		return hexutil.EncodeUint64(uint64(balance * 1e8)), nil
 	}
 }
