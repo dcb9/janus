@@ -19,29 +19,29 @@ func (p *ProxyETHAccounts) Request(_ *eth.JSONRPCRequest) (interface{}, error) {
 	return p.request()
 }
 
-func (p *ProxyETHAccounts) request() (ethresp eth.AccountsResponse, err error) {
-	ethresp = make(eth.AccountsResponse, 0)
-
+func (p *ProxyETHAccounts) request() (eth.AccountsResponse, error) {
 	// eth req -> qtum req
 	qtumreq := qtum.GetAddressesByAccountRequest("")
 
 	var qtumresp qtum.GetAddressesByAccountResponse
-	if err = p.Qtum.Request(qtum.MethodGetAddressesByAccount, &qtumreq, &qtumresp); err != nil {
-		return
+	if err := p.Qtum.Request(qtum.MethodGetAddressesByAccount, &qtumreq, &qtumresp); err != nil {
+		return nil, err
 	}
 
 	// qtum res -> eth res
-	var addr string
+	var accounts eth.AccountsResponse
 	for _, base58Addr := range qtumresp {
-		addr, err = p.Base58AddressToHex(base58Addr)
+		addr, err := p.Base58AddressToHex(base58Addr)
+
+		// discard addresses that cannot be converted to hex format (i.e. multisig, segwit)
 		if err != nil {
-			return
+			continue
 		}
 
-		ethresp = append(ethresp, utils.AddHexPrefix(addr))
+		accounts = append(accounts, utils.AddHexPrefix(addr))
 	}
 
-	return
+	return accounts, nil
 }
 
 func (p *ProxyETHAccounts) ToResponse(ethresp *qtum.CallContractResponse) *eth.CallResponse {
