@@ -3,6 +3,7 @@ package qtum
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -70,14 +71,18 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 }
 
 func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
-	reqBody, err := json.Marshal(req)
+	reqBody, err := json.MarshalIndent(req, "", "  ")
 	if err != nil {
 		return nil, err
 	}
 
-	l := log.With(level.Debug(c.logger), "method", req.Method)
+	l := log.With(level.Debug(c.logger))
+
+	l.Log("method", req.Method)
+
 	if c.debug {
-		l.Log("reqBody", reqBody)
+		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
+		// l.Log("reqBody", reqBody)
 	}
 
 	respBody, err := c.do(bytes.NewReader(reqBody))
@@ -86,7 +91,20 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 	}
 
 	if c.debug {
-		l.Log("respBody", respBody)
+		maxBodySize := 1024 * 8
+		var v interface{}
+		err := json.Unmarshal(respBody, &v)
+		formattedBody, err := json.MarshalIndent(v, "", "  ")
+		formattedBodyStr := string(formattedBody)
+		if len(formattedBodyStr) > maxBodySize {
+			formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]
+		}
+
+		if err == nil {
+			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
+		}
+
+		// l.Log("respBody", "abc")
 	}
 
 	res, err := responseBodyToResult(respBody)
