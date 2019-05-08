@@ -47,7 +47,7 @@ func (t *Transformer) Register(p ETHProxy) error {
 
 	m := p.Method()
 	if _, ok := t.transformers[m]; ok {
-		return errors.Errorf("method %s is exist", m)
+		return errors.Errorf("method already exist: %s ", m)
 	}
 
 	t.transformers[m] = p
@@ -99,6 +99,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHEstimateGas{ProxyETHCall: ethCall},
 		&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient},
 		&ProxyETHGetBalance{Qtum: qtumRPCClient},
+		&Web3ClientVersion{},
 	}
 }
 
