@@ -24,6 +24,16 @@ func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, error) {
 		return nil, err
 	}
 
-	resp := eth.NetVersionResponse(qtumresp.Chain)
+	var networkID string
+	switch qtumresp.Chain {
+	case "regtest":
+		// See: https://github.com/trufflesuite/ganache/issues/112 for an idea on how to generate an ID.
+		// https://github.com/ethereum/wiki/wiki/JSON-RPC#net_version
+		networkID = "0x1024"
+	default:
+		networkID = qtumresp.Chain
+	}
+
+	resp := eth.NetVersionResponse(networkID)
 	return &resp, nil
 }
