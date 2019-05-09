@@ -25,9 +25,11 @@ func httpHandler(c echo.Context) error {
 
 	cc.rpcReq = rpcReq
 
-	level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
+	level.Info(cc.logger).Log("msg", "proxy RPC", "method", rpcReq.Method)
+
+	// level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
 	result, err := cc.transformer.Transform(rpcReq)
-	level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
+	// level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
 
 	if err != nil {
 		err1 := errors.Cause(err)
